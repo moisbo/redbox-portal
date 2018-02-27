@@ -25,7 +25,9 @@ export module Services {
       'readFileFromRepo',
       'revokeToken',
       'create',
+      'fork',
       'project',
+      'updateProject',
       'groups',
       'templates',
       'userInfo',
@@ -74,13 +76,17 @@ export module Services {
       return Observable.fromPromise(get);
     }
 
-    forkProject(config: any, token: string, id: number, projectOrigin: string, projectDest: string) {
-      projectOrigin = encodeURIComponent(projectOrigin);
+    fork(config: any, token: string, creation: any) {
+      const origin = creation.template.id;
+      let body = {}
+      if(!creation.group.isUser) {
+        body = {namespace: creation.group.id}
+      }
       const post = request({
-        uri: config.host + `/api/v4/projects/${projectOrigin}/fork?access_token=${token}`,
+        uri: config.host + `/api/v4/projects/${origin}/fork?access_token=${token}`,
         method: 'POST',
-        body: {namespace: projectDest},
-        json: true,
+        body: body,
+        json: true
       });
       return Observable.fromPromise(post);
     }
@@ -151,6 +157,19 @@ export module Services {
         json: true
       });
       return Observable.fromPromise(get);
+    }
+
+    updateProject(config: any, token: string, pathWithNamespace: string, project: any) {
+      pathWithNamespace = encodeURIComponent(pathWithNamespace);
+      const body = {};
+      project.attributes.map(p => { body[p.name] = p.newValue; });
+      const put = request({
+        uri: config.host + `/api/v4/projects/${pathWithNamespace}?access_token=${token}`,
+        method: 'PUT',
+        body: body,
+        json: true
+      });
+      return Observable.fromPromise(put);
     }
 
     groups(config: any, token: string) {

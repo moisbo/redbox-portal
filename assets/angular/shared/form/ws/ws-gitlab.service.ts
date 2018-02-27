@@ -161,58 +161,89 @@ export class WSGitlabService extends BaseService {
     const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/create';
     //TODO: check namespace when creation
     return this.http.post(
-      wsUrl,
-      {creation: creation},
-      this.options
-    )
-    .toPromise()
-    .then((res: any) => {
-      console.log(res);
-      return this.extractData(res);
-    });
-  }
+    wsUrl,
+    {creation: creation},
+    this.options
+  )
+  .toPromise()
+  .then((res: any) => {
+    console.log(res);
+    return this.extractData(res);
+  });
+}
 
-  project(pathWithNamespace: string) {
-    const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/project';
-    //TODO: check namespace when creation
-    return this.http.post(
-      wsUrl,
-      {pathWithNamespace: pathWithNamespace},
-      this.options
-    )
-    .delay(5000)
-    .toPromise()
-    .then((res: any) => {
-      console.log(res);
-      return this.extractData(res);
-    });
-  }
+createWithTemplate(creation: any) {
+  const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/createWithTemplate';
+  //TODO: check namespace when creation
+  return this.http.post(
+  wsUrl,
+  {creation: creation},
+  this.options
+)
+.toPromise()
+.then((res: any) => {
+  console.log(res);
+  return this.extractData(res);
+});
+}
 
-  groups() {
-    const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/groups';
-    //TODO: check namespace when creation
-    return this.http.get(
-      wsUrl,
-      this.options
-    )
-    .toPromise()
-    .then((res: any) => {
-      console.log(res);
-      return this.extractData(res);
-    });
-  }
+project(pathWithNamespace: string) {
+  const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/project';
+  //TODO: check namespace when creation
+  return this.http.post(
+  wsUrl,
+  {pathWithNamespace: pathWithNamespace},
+  this.options
+)
+.delay(5000)
+.toPromise()
+.then((res: any) => {
+  console.log(res);
+  return this.extractData(res);
+});
+}
 
-  templates() {
-    const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/templates';
-    //TODO: check namespace when creation
-    return this.http.get(
-      wsUrl,
-      this.options
-    )
-    .toPromise()
-    .then((res: any) => {
-      console.log(res);
-      return this.extractData(res);
-    });
-  }
+updateProject(creation: any) {
+  const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/updateProject';
+  //TODO: check namespace when creation
+  return this.http.post(
+  wsUrl,
+  {creation: creation},
+  this.options
+)
+.delay(5000)
+.toPromise()
+.then((res: any) => {
+  console.log(res);
+  return this.extractData(res);
+});
+}
+
+groups() {
+  const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/groups';
+  //TODO: check namespace when creation
+  return this.http.get(
+  wsUrl,
+  this.options
+)
+.toPromise()
+.then((res: any) => {
+  console.log(res);
+  return this.extractData(res);
+});
+}
+
+templates() {
+  const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/templates';
+  //TODO: check namespace when creation
+  return this.http.get(
+  wsUrl,
+  this.options
+)
+.toPromise()
+.then((res: any) => {
+  console.log(res);
+  return this.extractData(res);
+});
+}
 }

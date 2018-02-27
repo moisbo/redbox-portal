@@ -48,7 +48,7 @@
       </table>
       <div>
         <button type="button" class="btn btn-default" (click)="field.getWorkspacesRelated()"><i class="fa fa-refresh"></i>&nbsp;Sync</button>
-        <button type="button" class="btn btn-success" (click)="field.createWorkspace()"><i class="fa fa-plus-square"></i>&nbsp;Create</button>
+        <button type="button" class="btn btn-success" (click)="field.loadCreateWorkspaceModal()"><i class="fa fa-plus-square"></i>&nbsp;Create</button>
       </div>
     </div>
     <div style="display:none">
@@ -103,8 +103,8 @@
           </div>
           <div class="modal-body">
             <h5>Workspace Details</h5>
-            <p>name: {{ field.currentWorkspace.path_with_namespace }}</p>
-            <p>web url: {{ field.currentWorkspace.web_url }}</p>
+            <p>Name: {{ field.currentWorkspace.path_with_namespace }}</p>
+            <p>Web Url: {{ field.currentWorkspace.web_url }}</p>
             <h5>Processing</h5>
             <p>Checking your master workspace link ...&nbsp;<span *ngIf="field.checks.master; then isDone; else isSpinning"></span></p>
             <p *ngIf="field.checks.comparing">Checking current links ...&nbsp;<span *ngIf="field.checks.link; then isDone; else isSpinning"></span></p>
@@ -136,8 +136,8 @@
               <div class="form-group">
                 <h4>Select Space</h4>
                 <select class="form-control" [(ngModel)]="field.creation.group" name="creationNamespace">
-                  <option *ngFor="let g of field.groups" [value]="g.path"
-                  [selected]="field.creation.group === g.path">{{ g.path }}</option>
+                  <option *ngFor="let g of field.groups" [ngValue]="g"
+                  [selected]="field.creation.group === g">{{ g.path }}</option>
                 </select>
               </div>
               <div class="form-group">
@@ -148,19 +148,13 @@
                 <h4>Add a description</h4>
                 <input required minlength="4" type="text" class="form-control" name="description" [(ngModel)]="field.creation.description">
               </div>
-              <div class="form-group">
-                <button disabled class="btn btn-primary" type="submit">Check Name</button>
-              </div>
-              <div class="form-group">
-                <div class="alert alert-success">Available&nbsp;<i class="fa fa-check-circle"></i></div>
-              </div>
             </form>
             <form *ngIf="!field.creation.created" #form="ngForm" (ngSubmit)="field.create()" novalidate autocomplete="off">
               <div class="form-group">
                 <h4>Select Template</h4>
                 <select class="form-control" [(ngModel)]="field.creation.template" name="creationTemplate">
-                  <option *ngFor="let t of field.templates" [value]="t.pathWithNamespace"
-                  [selected]="field.creation.template === t.pathWithNamespace">{{ t.pathWithNamespace || 'No Template' }}</option>
+                  <option *ngFor="let t of field.templates" [ngValue]="t"
+                  [selected]="field.creation.template === t">{{ t.pathWithNamespace || 'No Template' }}</option>
                 </select>
               </div>
               <div class="form-group">

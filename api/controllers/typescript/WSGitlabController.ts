@@ -29,7 +29,9 @@ export module Controllers {
       'checkRepo',
       'revokeToken',
       'create',
+      'createWithTemplate',
       'project',
+      'updateProject',
       'projectsRelatedRecord',
       'groups',
       'templates'
@@ -94,7 +96,7 @@ export module Controllers {
           sails.log.error(error);
           const errorMessage = `Failed to get token for user: ${username}`;
           sails.log.error(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
         });
       }
     }
@@ -118,7 +120,7 @@ export module Controllers {
           sails.log.error(error);
           const errorMessage = `Failed to get token for user: ${user.username}`;
           sails.log.error(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
         });
       }
     }
@@ -143,7 +145,7 @@ export module Controllers {
           sails.log.error(error);
           const errorMessage = `Failed to get info for with token: ${gitlab.accessToken.access_token}`;
           sails.log.error(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          this.ajaxFail(req, res, null, error);
         });
       }
     }
@@ -166,7 +168,7 @@ export module Controllers {
           sails.log.error(error);
           const errorMessage = `Failed to get projects for token: ${token}`;
           sails.log.error(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
         });
       }
     }
@@ -204,7 +206,7 @@ export module Controllers {
         }, error => {
           const errorMessage = `Failed to get projectsRelatedRecord for token: ${gitlab.accessToken.access_token}`;
           sails.log.debug(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
         }, () => {
           sails.log.debug('complete');
           currentProjects.map(p => {
@@ -261,9 +263,9 @@ export module Controllers {
           this.ajaxOk(req, res, null, response);
         }, error => {
           sails.log.error(error);
-          const errorMessage = `Failed to link workspace with ID: ${projectId} : ${JSON.stringify(error)}` ;
+          const errorMessage = `Failed to link workspace with ID: ${projectId}` ;
           sails.log.error(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
         });
       }
     }
@@ -290,9 +292,9 @@ export module Controllers {
           this.ajaxOk(req, res, null, wI);
         }, error => {
           sails.log.error(error);
-          const errorMessage = `Failed check link workspace project: ${projectNameSpace} : ${JSON.stringify(error)}` ;
-          sails.log.error(error.message);
-          this.ajaxFail(req, res, null, errorMessage);
+          const errorMessage = `Failed check link workspace project: ${projectNameSpace}`;
+          sails.log.error(errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
         });
       }
     }
@@ -323,9 +325,9 @@ export module Controllers {
           this.ajaxFail(req, res, null, errorMessage);
         }
       }, error => {
-        const errorMessage = `Failed compare link workspace project: ${projectNameSpace} : ${JSON.stringify(error)}` ;
+        const errorMessage = `Failed compare link workspace project: ${projectNameSpace}`;
         sails.log.error(errorMessage);
-        this.ajaxFail(req, res, null, errorMessage);
+        this.ajaxFail(req, res, errorMessage, error);
       });
     }
 
@@ -333,11 +335,13 @@ export module Controllers {
       const creation = req.param('creation');
 
       let workspaceId = '';
-      const namespace = creation.group + '/' + creation.name;
+      const group = creation.group;
+      const namespace = group.path + '/' + creation.name;
       if (!req.isAuthenticated()) {
         this.ajaxFail(req, res, `User not authenticated`);
       } else {
         const userId = req.user.id;
+
         return WSGitlabService.userInfo(userId)
         .flatMap(user => {
           const gitlab = user.accessToken.gitlab;
@@ -347,9 +351,66 @@ export module Controllers {
           this.ajaxOk(req, res, null, response);
         }, error => {
           sails.log.error(error);
-          const errorMessage = `Failed to create workspace with: ${namespace} : ${JSON.stringify(error)}` ;
+          const errorMessage = `Failed to create workspace with: ${namespace}` ;
           sails.log.error(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          const data = {status: false, message: {description: errorMessage, error: error}}
+          this.ajaxFail(req, res, null, data);
+        });
+      }
+    }
+
+    public createWithTemplate(req, res) {
+      //Needs to fork project
+      if (!req.isAuthenticated()) {
+        this.ajaxFail(req, res, `User not authenticated`);
+      } else {
+        const creation = req.param('creation');
+        const userId = req.user.id;
+        return WSGitlabService.userInfo(userId)
+        .flatMap(user => {
+          const gitlab = user.accessToken.gitlab;
+          return WSGitlabService.fork(this.config, gitlab.accessToken.access_token, creation);
+        }).subscribe(response => {
+          sails.log.debug('fork');
+          this.ajaxOk(req, res, null, response);
+        }, error => {
+          sails.log.error(error);
+          const errorMessage = `Failed to fork project with: ${creation}`;
+          sails.log.error(errorMessage);
+          const data = {status: false, message: {description: errorMessage, error: error}}
+          this.ajaxFail(req, res, null, data);
+        });
+      }
+    }
+
+    public updateProject(req, res) {
+      //TODO: In this case only name can be updated for FORK, should it have more?
+      //Remove fork relationship?
+      //change name
+      if (!req.isAuthenticated()) {
+        this.ajaxFail(req, res, `User not authenticated`);
+      } else {
+        const creation = req.param('creation');
+        //TODO: make some validations on each case of the update
+        const project = {};
+        const projectId = creation.group.path + '/' + creation.template.name; //Can also be the id
+        project['name'] = creation.template.name;
+        project['group'] = creation.group;
+        project['attributes'] = [{name: 'name', newValue: creation.name}, {name: 'path', newValue: creation.name}];
+        const userId = req.user.id;
+        return WSGitlabService.userInfo(userId)
+        .flatMap(user => {
+          const gitlab = user.accessToken.gitlab;
+          return WSGitlabService.updateProject(this.config, gitlab.accessToken.access_token, projectId, project);
+        }).subscribe(response => {
+          sails.log.debug('updateProject');
+          this.ajaxOk(req, res, null, response);
+        }, error => {
+          sails.log.error(error);
+          const errorMessage = `Failed to update project with: ${creation}`;
+          sails.log.error(errorMessage);
+          const data = {status: false, message: {description: errorMessage, error: error}}
+          this.ajaxFail(req, res, null, data);
         });
       }
     }
@@ -361,21 +422,19 @@ export module Controllers {
         this.ajaxFail(req, res, `User not authenticated`);
       } else {
         const userId = req.user.id;
-        return WSGitlabService
-        .userInfo(userId)
+        return WSGitlabService.userInfo(userId)
         .flatMap(user => {
           const gitlab = user.accessToken.gitlab;
-          return WSGitlabService
-          .project(this.config, gitlab.accessToken.access_token, pathWithNamespace);
+          return WSGitlabService.project(this.config, gitlab.accessToken.access_token, pathWithNamespace);
         })
         .subscribe(response => {
           sails.log.debug('project');
           this.ajaxOk(req, res, null, response);
         }, error => {
           sails.log.error(error);
-          const errorMessage = `Failed to check project with: ${pathWithNamespace} : ${JSON.stringify(error)}` ;
+          const errorMessage = `Failed to check project with: ${pathWithNamespace}` ;
           sails.log.error(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
         });
       }
     }
@@ -392,14 +451,14 @@ export module Controllers {
         }).subscribe(response => {
           let simple = [];
           if(response.value){
-            simple = response.value.map(p => {return {id: p.id, pathWithNamespace: p.path_with_namespace}});
+            simple = response.value.map(p => {return {id: p.id, pathWithNamespace: p.path_with_namespace, name: p.path, namespace: p.namespace.path}});
           }
           this.ajaxOk(req, res, null, simple);
         }, error => {
           sails.log.error(error);
-          const errorMessage = `Failed to check templates : ${JSON.stringify(error)}` ;
+          const errorMessage = `Failed to check templates`;
           sails.log.error(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
         });
       }
     }
@@ -418,9 +477,9 @@ export module Controllers {
           this.ajaxOk(req, res, null, response);
         }, error => {
           sails.log.error(error);
-          const errorMessage = `Failed to get groups : ${JSON.stringify(error)}` ;
+          const errorMessage = `Failed to get groups`;
           sails.log.error(errorMessage);
-          this.ajaxFail(req, res, errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
         });
       }
     }

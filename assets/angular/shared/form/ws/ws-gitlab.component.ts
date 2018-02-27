@@ -156,13 +156,13 @@ export class WSGitlabField extends FieldBase<any> {
 
 }
 
-createWorkspace() {
-  const group1 = {id: this.wsUser.id, path: this.wsUser.username};
-  this.groups = [group1];
-  this.creation.group = group1.path;
-  const template1 = {pathWithNamespace: undefined};
-  this.templates = [template1]
-  this.creation.template = template1.pathWithNamespace;
+loadCreateWorkspaceModal() {
+  //To populate dropdown with first space and template
+  this.groups = [{id: this.wsUser.id, path: this.wsUser.username, isUser: true}];
+  this.creation.group = this.groups[0];
+  this.templates = [{pathWithNamespace: undefined}];
+  this.creation.template = this.templates[0];
+
   this.wsGitlabService.groups()
   .then(response => {
     this.groups = this.groups.concat(response);
@@ -170,31 +170,110 @@ createWorkspace() {
   }).then(response => {
     this.templates = this.templates.concat(response);
     jQuery('#gitlabCreateModal').modal('show');
+  })
+  .catch(error => {
+    this.creation.message = error;
   });
-
 }
 
 create() {
-  this.creation.message = 'Creating workspace';
-  this.creation.creationAlert = 'info';
-  console.log(this.creation)
+  if(this.validateWorkspace()){
+    this.creation.message = 'Creating workspace';
+    this.creation.creationAlert = 'info';
+    debugger;
+    if(this.creation.template){
+      this.createWithTemplate();
+    }else {
+      this.createWorkspace();
+    }
+  }else {
+    this.creation.message = this.creation.validateMessage;
+    this.creation.creationAlert = 'danger';
+  }
+}
+
+validateWorkspace() {
+  if(!this.creation.name) {
+    this.creation.validateMessage = 'Name of the workspace is required';
+    this.creation.creationAlert = 'danger';
+    return false;
+  }
+  if(!this.creation.description) {
+    this.creation.validateMessage = 'Description of the workspace is required';
+    this.creation.creationAlert = 'danger';
+    return false;
+  }
+  this.creation.message = undefined;
+  this.creation.creationAlert = undefined;
+  return true;
+}
+
+createWorkspace() {
   this.wsGitlabService.createWorkspace(this.creation)
   .then(response => {
-    return this.checkCreation();
+    if(response.status == false){
+      //TODO: improve this assignment in case of error.
+      const name = response.message.error.error.message.name || '';
+      throw new Error('Name ' + _.first(name));
+    } else {
+      return this.checkCreation();
+    }
   }).then(response => {
-    this.creation.message = 'Linking workspace';
-    this.creation.creationAlert = 'warning';
-    return this.createLink(response.id)
-    .then(response => {
-      this.creation.message = 'Workspace created and linked';
-      this.creation.creationAlert = 'success';
-    });
+    if(response.status == false){
+      debugger;
+      //TODO: improve this assignment in case of error.
+      const name = response.message.error.error.message.name || '';
+      throw new Error(_.first(name));
+    }else {
+      this.creation.message = 'Linking workspace';
+      this.creation.creationAlert = 'warning';
+      return this.createLink(response.id)
+      .then(response => {
+        if(response.status == false){
+          throw new Error(response.message.description);
+        }
+        this.creation.message = 'Workspace created and linked';
+        this.creation.creationAlert = 'success';
+      });
+    }
   })
   .catch(error => {
     this.creation.creationAlert = 'danger';
-    this.creation.message = 'There was a problem creating and linking your workspace';
-    console.log(error);
+    this.creation.message = error;
+  });
+}
+
+createWithTemplate() {
+  this.wsGitlabService.createWithTemplate(this.creation)
+  .then(response => {
+    return this.wsGitlabService.updateProject(this.creation);
   })
+  .then(response => {
+    if(response.status == false){
+      debugger;
+      //TODO: improve this assignment in case of error.
+      const name = response.message.error.error.message.name || '';
+      throw new Error(_.first(name));
+    }else {
+      this.creation.message = 'Linking workspace';
+      this.creation.creationAlert = 'warning';
+      return this.createLink(response.id)
+      .then(response => {
+        if(response.status == false){
+          throw new Error(response.message.description);
+        }
+        this.creation.message = 'Workspace created and linked';
+        this.creation.creationAlert = 'success';
+      });
+    }
+  })
+  .then(response => {
+    console.log(response);
+  })
+  .catch(error => {
+    this.creation.creationAlert = 'danger';
+    this.creation.message = error;
+  });
 }
 
 checkCreation() {
@@ -340,10 +419,9 @@ class Creation {
   created: boolean = false;
   name: string;
   namespace: string;
-  creationAlert: string;
+  creationAlert: string = '';
   blank: boolean = true;
-  template: string;
+  template: any;
   description: string;
-  group: string;
-  isGroup: boolean = false;
+  group: any;
 }

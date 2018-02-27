@@ -2,7 +2,7 @@
 # Uncomment below if you need to see the minified version....
 # export buildTarget="PROD"
 PORTAL_DIR=/opt/redbox-portal
-PORTAL_IMAGE=qcifengineering/redbox-portal:latest
+PORTAL_IMAGE=moisbo/redbox-portal:develop_gitlab
 source dev_build/buildFns.sh
 sudo chown -R vagrant:vagrant *
 # Not really needed but I'm putting this in a for loop in case we want to add more arguments later

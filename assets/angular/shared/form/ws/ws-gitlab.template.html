@@ -19,33 +19,38 @@
     </form>
   </div>
   <div *ngIf="field.wsUser.token" class="row mt-3 form-group">
-    <table class="table">
-      <thead>
-        <tr>
-          <ng-container *ngFor="let header of field.columns"><th>{{ header.label }}</th></ng-container>
-          <th>RDMP</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of field.workspaces">
-          <ng-container *ngFor="let column of field.columns">
-            <td  *ngIf="column.show != false">
-              <span *ngIf="column.link != null; else noProcessing "><a href="/{{ branding }}/{{ portal }}/{{ column.link.pattern}}"></a></span>
-              <ng-template #multivalue></ng-template>
-              <ng-template #noProcessing><span >{{ item[column.property] }}</span></ng-template>
-            </td></ng-container>
-            <td>
-              <span *ngIf="item.rdmp.info && item.rdmp.info.rdmp; else isNotLinked ">
-                <button disabled type="button" class="btn btn-success btn-block" *ngIf="item.rdmp.info.rdmp === field.rdmp"> Linked </button>
-                <button disabled type="button" class="btn btn-info btn-block" *ngIf="item.rdmp.info.rdmp != field.rdmp"> Linked to another RDMP</button>
-              </span>
-              <ng-template #isNotLinked>
-                <button type="button" class="btn btn-info btn-block" (click)="field.linkWorkspace(item.id)"> Link </button>
-              </ng-template>
-            </td>
+    <div class="row">
+      <table class="table">
+        <thead>
+          <tr>
+            <ng-container *ngFor="let header of field.columns"><th>{{ header.label }}</th></ng-container>
+            <th>RDMP</th>
           </tr>
-        </tbody>
-      </table>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of field.workspaces">
+            <ng-container *ngFor="let column of field.columns">
+              <td *ngIf="column.show != false">
+                <span *ngIf="column.link != null; else noProcessing "><a href="/{{ branding }}/{{ portal }}/{{ column.link.pattern}}"></a></span>
+                <ng-template #multivalue></ng-template>
+                <ng-template #noProcessing><span >{{ item[column.property] }}</span></ng-template>
+              </td></ng-container>
+              <td>
+                <span *ngIf="item.rdmp.info && item.rdmp.info.rdmp; else isNotLinked ">
+                  <button disabled type="button" class="btn btn-success btn-block" *ngIf="item.rdmp.info.rdmp === field.rdmp"> Linked </button>
+                  <button disabled type="button" class="btn btn-info btn-block" *ngIf="item.rdmp.info.rdmp != field.rdmp"> Linked to another RDMP</button>
+                </span>
+                <ng-template #isNotLinked>
+                  <button type="button" class="btn btn-info btn-block" (click)="field.linkWorkspace(item.id)"> Link </button>
+                </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div *ngIf="field.loading" class="row">
+        <img class="center-block" src="/images/loading.svg">
+      </div>
       <div>
         <button type="button" class="btn btn-default" (click)="field.getWorkspacesRelated()"><i class="fa fa-refresh"></i>&nbsp;Sync</button>
         <button type="button" class="btn btn-success" (click)="field.loadCreateWorkspaceModal()"><i class="fa fa-plus-square"></i>&nbsp;Create</button>
@@ -131,48 +136,54 @@
             <h4 class="modal-title">Create Workspace</h4>
           </div>
           <div class="modal-body">
-            <h5>Workspace Details</h5>
-            <form *ngIf="!field.creation.created" #form="ngForm" (ngSubmit)="field.checkName()" novalidate autocomplete="off">
-              <div class="form-group">
-                <h4>Select Space</h4>
-                <select class="form-control" [(ngModel)]="field.creation.group" name="creationNamespace">
-                  <option *ngFor="let g of field.groups" [ngValue]="g"
-                  [selected]="field.creation.group === g">{{ g.path }}</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <h4>Name your workspace</h4>
-                <input required minlength="4" type="text" class="form-control" name="creationName" [(ngModel)]="field.creation.name">
-              </div>
-              <div class="form-group">
-                <h4>Add a description</h4>
-                <input required minlength="4" type="text" class="form-control" name="description" [(ngModel)]="field.creation.description">
-              </div>
-            </form>
-            <form *ngIf="!field.creation.created" #form="ngForm" (ngSubmit)="field.create()" novalidate autocomplete="off">
-              <div class="form-group">
-                <h4>Select Template</h4>
-                <select class="form-control" [(ngModel)]="field.creation.template" name="creationTemplate">
-                  <option *ngFor="let t of field.templates" [ngValue]="t"
-                  [selected]="field.creation.template === t">{{ t.pathWithNamespace || 'No Template' }}</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <div *ngIf="field.creation.message" class="alert alert-{{ field.creation.creationAlert }}" class="form-group">
-                  <span *ngIf="field.creation.creationAlert == 'danger' || field.creation.creationAlert == 'success'; then isDone; else isSpinning"></span>{{ field.creation.message }}
-                  <ng-template #isDone>
-                    <i class="fa fa-check-circle"></i>
-                  </ng-template>
-                  <ng-template #isSpinning>
-                    <i class="fa fa-spinner fa-spin"></i>
-                  </ng-template>
+            <div *ngIf="field.loadingModal" class="row">
+              <img class="center-block" src="/images/loading.svg">
+            </div>
+            <div *ngIf="!field.loadingModal">
+              <h5>Workspace Details</h5>
+              <form *ngIf="!field.creation.created" #form="ngForm" (ngSubmit)="field.checkName()" novalidate autocomplete="off">
+                <div class="form-group">
+                  <h4>Select Space</h4>
+                  <select class="form-control" [(ngModel)]="field.creation.group" name="creationNamespace">
+                    <option *ngFor="let g of field.groups" [ngValue]="g"
+                    [selected]="field.creation.group === g">{{ g.path }}</option>
+                  </select>
                 </div>
-              </div>
-              <button class="btn btn-primary" type="submit">Create</button>
-            </form>
+                <div class="form-group">
+                  <h4>Name your workspace</h4>
+                  <input required minlength="4" type="text" class="form-control" name="creationName" [(ngModel)]="field.creation.name">
+                </div>
+                <div class="form-group">
+                  <h4>Add a description</h4>
+                  <input required minlength="4" type="text" class="form-control" name="description" [(ngModel)]="field.creation.description">
+                </div>
+              </form>
+              <form *ngIf="!field.creation.created" #form="ngForm" (ngSubmit)="field.create()" novalidate autocomplete="off">
+                <div class="form-group">
+                  <h4>Select Template</h4>
+                  <select class="form-control" [(ngModel)]="field.creation.template" name="creationTemplate">
+                    <option *ngFor="let t of field.templates" [ngValue]="t"
+                    [selected]="field.creation.template === t">{{ t.pathWithNamespace || 'No Template' }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <div *ngIf="field.creation.message" class="alert alert-{{ field.creation.creationAlert }}" class="form-group">
+                    <span *ngIf="field.creation.creationAlert == 'danger' || field.creation.creationAlert == 'success'; then isDone; else isSpinning"></span>{{ field.creation.message }}
+                    <ng-template #isDone>
+                      <i class="fa fa-check-circle"></i>
+                    </ng-template>
+                    <ng-template #isSpinning>
+                      <i class="fa fa-spinner fa-spin"></i>
+                    </ng-template>
+                  </div>
+                </div>
+                <button class="btn btn-primary" type="submit">Create</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              </form>
+            </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            &nbsp;
           </div>
         </div>
       </div>

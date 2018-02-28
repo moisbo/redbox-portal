@@ -62,6 +62,8 @@ export class WSGitlabField extends FieldBase<any> {
   groups: Array<Group> = [];
   templates: Array<Template> = [];
   revokeMessage: string;
+  loading: boolean;
+  loadingModal: boolean;
 
   constructor(options: any, injector: any) {
     super(options, injector);
@@ -122,9 +124,13 @@ export class WSGitlabField extends FieldBase<any> {
   }
 
   getWorkspacesRelated() {
+    this.loading = true;
     this.workspaces = [];
     this.wsGitlabService.projectsRelatedRecord()
-    .then(w => {this.workspaces = w})
+    .then(w => {
+      this.workspaces = w;
+      this.loading = false;
+    })
     .catch(e => console.log(e));
   }
 
@@ -158,18 +164,19 @@ export class WSGitlabField extends FieldBase<any> {
 
 loadCreateWorkspaceModal() {
   //To populate dropdown with first space and template
+  this.loadingModal = true;
+  jQuery('#gitlabCreateModal').modal('show');
   this.groups = [{id: this.wsUser.id, path: this.wsUser.username, isUser: true}];
   this.creation.group = this.groups[0];
   this.templates = [{pathWithNamespace: undefined}];
   this.creation.template = this.templates[0];
-
   this.wsGitlabService.groups()
   .then(response => {
     this.groups = this.groups.concat(response);
     return this.wsGitlabService.templates();
   }).then(response => {
     this.templates = this.templates.concat(response);
-    jQuery('#gitlabCreateModal').modal('show');
+    this.loadingModal = false;
   })
   .catch(error => {
     this.creation.message = error;

@@ -187,7 +187,6 @@ create() {
   if(this.validateWorkspace()){
     this.creation.message = 'Creating workspace';
     this.creation.creationAlert = 'info';
-    debugger;
     if(this.creation.template){
       this.createWithTemplate();
     }else {
@@ -227,7 +226,6 @@ createWorkspace() {
     }
   }).then(response => {
     if(response.status == false){
-      debugger;
       //TODO: improve this assignment in case of error.
       const name = response.message.error.error.message.name || '';
       throw new Error(_.first(name));
@@ -257,7 +255,6 @@ createWithTemplate() {
   })
   .then(response => {
     if(response.status == false){
-      debugger;
       //TODO: improve this assignment in case of error.
       const name = response.message.error.error.message.name || '';
       throw new Error(_.first(name));

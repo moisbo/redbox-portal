@@ -47,6 +47,7 @@ export module Services {
     }
 
     //**GITLAB**//
+    // TODO: Move section to a different file
 
     token(config: any, username: string, password: string) {
       const post = request({
@@ -225,9 +226,11 @@ export module Services {
     }
 
     //**REDBOX-PORTAL-API**//
+    // TODO: Move section to a different file
 
     createWorkspaceRecord(config: any, project: any, workflowStage: string) {
-      //TODO: how to get the workflowStage??
+      // TODO: how to get the workflowStage??
+      // TODO: Get the project metadata from the form, move this logic to the controller
       const post = request({
       uri: config.brandingAndPortalUrl + `/api/records/metadata/${config.recordType}`,
       method: 'POST',

@@ -62,6 +62,8 @@
     <div *ngIf="field.wsUser.token" class="row mt-3 form-group">
       <button type="button" class="btn btn-danger" (click)="field.revokeModal()">{{ field.revokeMessage }}</button>
     </div>
+    <div class="row form-group">
+    </div>
     <div class="row mt-3 form-group">
       <button type="button" class="btn btn-default" (click)="field.sendToRDMP()">{{ field.backToRDMP }}</button>
     </div>
@@ -108,7 +110,7 @@
           </div>
           <div class="modal-body">
             <h5>Workspace Details</h5>
-            <p>Name: {{ field.currentWorkspace.path_with_namespace }}</p>
+            <p>Name: {{ field.creation.name }} / {{ field.creation.namespace }}</p>
             <p>Web Url: {{ field.currentWorkspace.web_url }}</p>
             <h5>Processing</h5>
             <p>Checking your master workspace link ...&nbsp;<span *ngIf="field.checks.master; then isDone; else isSpinning"></span></p>

@@ -78,9 +78,9 @@ export module Services {
 
     fork(config: any, token: string, creation: any) {
       const origin = creation.template.id;
-      let body = {}
+      let body = {};
       if(!creation.group.isUser) {
-        body = {namespace: creation.group.id}
+        body = {namespace: creation.group.id};
       }
       const post = request({
         uri: config.host + `/api/v4/projects/${origin}/fork?access_token=${token}`,
@@ -101,9 +101,10 @@ export module Services {
       return Observable.fromPromise(deleteRequest);
     }
 
-    addWorkspaceInfo(config: any, token: string, projectId: number, workspaceLink: string, filePath: string) {
+    addWorkspaceInfo(config: any, token: string, project: any, workspaceLink: string, filePath: string) {
+      const projectNameSpace = encodeURIComponent(project.namespace + '/' + project.name);
       const post = request({
-        uri: config.host + `/api/v4/projects/${projectId}/repository/files/${filePath}?access_token=${token}`,
+        uri: config.host + `/api/v4/projects/${projectNameSpace}/repository/files/${filePath}?access_token=${token}`,
         method: 'POST',
         body: {
           branch: 'master',
@@ -225,16 +226,16 @@ export module Services {
 
     //**REDBOX-PORTAL-API**//
 
-    createWorkspaceRecord(config: any, workspace: any, workflowStage: string) {
+    createWorkspaceRecord(config: any, project: any, workflowStage: string) {
       //TODO: how to get the workflowStage??
       const post = request({
       uri: config.brandingAndPortalUrl + `/api/records/metadata/${config.recordType}`,
       method: 'POST',
       body: {
         metadata: {
-          title: workspace.path_with_namespace,
-          description: workspace.description,
-          type: "GitLab"
+          title: project.namespace + '/' + project.name,
+          description: project.description,
+          type: 'GitLab'
         },
         workflowStage: workflowStage
       },

@@ -143,7 +143,10 @@ export class WSGitlabField extends FieldBase<any> {
   .then(response => {
     if(!response.ws) {
       this.checks.master = true;
-      return this.createLink(this.currentWorkspace.id)
+      this.creation.name = this.currentWorkspace.path;
+      this.creation.namespace = this.currentWorkspace.namespace.path;
+      this.creation.description = this.currentWorkspace.description;
+      return this.createLink(this.creation)
       .then(response => {
         this.checks.rdmp = true;
       });
@@ -165,6 +168,8 @@ export class WSGitlabField extends FieldBase<any> {
 loadCreateWorkspaceModal() {
   //To populate dropdown with first space and template
   this.loadingModal = true;
+  this.creation.name = '';
+  this.creation.description = '';
   jQuery('#gitlabCreateModal').modal('show');
   this.groups = [{id: this.wsUser.id, path: this.wsUser.username, isUser: true}];
   this.creation.group = this.groups[0];
@@ -187,7 +192,7 @@ create() {
   if(this.validateWorkspace()){
     this.creation.message = 'Creating workspace';
     this.creation.creationAlert = 'info';
-    if(this.creation.template){
+    if(this.creation.template.pathWithNamespace){
       this.createWithTemplate();
     }else {
       this.createWorkspace();
@@ -232,7 +237,8 @@ createWorkspace() {
     }else {
       this.creation.message = 'Linking workspace';
       this.creation.creationAlert = 'warning';
-      return this.createLink(response.id)
+      this.creation.namespace = this.creation.group.path;
+      return this.createLink(this.creation)
       .then(response => {
         if(response.status == false){
           throw new Error(response.message.description);
@@ -261,7 +267,8 @@ createWithTemplate() {
     }else {
       this.creation.message = 'Linking workspace';
       this.creation.creationAlert = 'warning';
-      return this.createLink(response.id)
+      this.creation.namespace = this.creation.group.path;
+      return this.createLink(this.creation)
       .then(response => {
         if(response.status == false){
           throw new Error(response.message.description);
@@ -282,7 +289,7 @@ createWithTemplate() {
 
 checkCreation() {
   let pathWithNamespace = '';
-  pathWithNamespace = this.creation.group + '/' + this.creation.name;
+  pathWithNamespace = this.creation.group.path + '/' + this.creation.name;
   return this.wsGitlabService.project(pathWithNamespace);
 }
 
@@ -290,9 +297,9 @@ checkName(){
   //TODO: check workspace name if it is available
 }
 
-createLink(projectId: number) {
+createLink(project: any) {
   return this.wsGitlabService
-  .link(this.rdmp, projectId, this.currentWorkspace)
+  .link(this.rdmp, project)
 }
 
 onLogin() {

@@ -224,8 +224,7 @@ export module Controllers {
         this.ajaxFail(req, res, `User not authenticated`);
       } else {
         this.config.brandingAndPortalUrl = sails.getBaseUrl() + BrandingService.getBrandAndPortalPath(req);
-        const projectId = req.param('projectId');
-        const workspace = req.param('workspace');
+        const project = req.param('project');
         const rdmpId = req.param('rdmpId');
 
         let workspaceId = null;
@@ -239,11 +238,11 @@ export module Controllers {
         })
         .flatMap(user => {
           gitlab = user.accessToken.gitlab;
-          return WSGitlabService.createWorkspaceRecord(this.config, workspace, 'draft');
+          return WSGitlabService.createWorkspaceRecord(this.config, project, 'draft');
         }).flatMap(response => {
           workspaceId = response.oid;
           sails.log.debug('addWorkspaceInfo');
-          return WSGitlabService.addWorkspaceInfo(this.config, gitlab.accessToken.access_token, projectId, rdmpId + '.' + workspaceId, 'stash.workspace');
+          return WSGitlabService.addWorkspaceInfo(this.config, gitlab.accessToken.access_token, project, rdmpId + '.' + workspaceId, 'stash.workspace');
         })
         .flatMap(response => {
           sails.log.debug('addParentRecordLink');
@@ -263,7 +262,7 @@ export module Controllers {
           this.ajaxOk(req, res, null, response);
         }, error => {
           sails.log.error(error);
-          const errorMessage = `Failed to link workspace with ID: ${projectId}` ;
+          const errorMessage = `Failed to link workspace with ID: ${project.id}` ;
           sails.log.error(errorMessage);
           this.ajaxFail(req, res, errorMessage, error);
         });
@@ -375,7 +374,7 @@ export module Controllers {
           this.ajaxOk(req, res, null, response);
         }, error => {
           sails.log.error(error);
-          const errorMessage = `Failed to fork project with: ${creation}`;
+          const errorMessage = `Failed to fork project with Id: ${creation.template.id}`;
           sails.log.error(errorMessage);
           const data = {status: false, message: {description: errorMessage, error: error}}
           this.ajaxFail(req, res, null, data);

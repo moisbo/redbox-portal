@@ -97,11 +97,11 @@ export class WSGitlabService extends BaseService {
     });
   }
 
-  link(rdmpId: string, projectId: number, workspace: any) {
+  link(rdmpId: string, project: any) {
     const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/link';
     return this.http.post(
       wsUrl,
-      {rdmpId: rdmpId, projectId: projectId, workspace: workspace},
+      {rdmpId: rdmpId, project: project},
       this.options
     )
     .toPromise()

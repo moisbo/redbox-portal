@@ -203,5 +203,15 @@ module.exports.routes = {
   'post /:branding/:portal/ws/gitlab/project': 'typescript/WSGitlabController.project',
   'post /:branding/:portal/ws/gitlab/updateProject': 'typescript/WSGitlabController.updateProject',
   'get /:branding/:portal/ws/gitlab/groups': 'typescript/WSGitlabController.groups',
-  'get /:branding/:portal/ws/gitlab/templates': 'typescript/WSGitlabController.templates'
+  'get /:branding/:portal/ws/gitlab/templates': 'typescript/WSGitlabController.templates',
+
+  /**
+  *
+  * Routes for Omero
+  *
+  */
+
+  'post /:branding/:portal/ws/omero/projects': 'typescript/OmeroController.projects',
+
+
 };

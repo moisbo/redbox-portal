@@ -30,5 +30,21 @@ module.exports.workflow = {
       },
       starting: true
     }
+  },
+  "omero": {
+    "draft": {
+      config: {
+        workflow: {
+          stage: 'draft',
+          stageLabel: 'Draft',
+        },
+        authorization: {
+          viewRoles: ['Admin', 'Librarians'],
+          editRoles: ['Admin', 'Librarians']
+        },
+        form: 'omero'
+      },
+      starting: true
+    }
   }
 };

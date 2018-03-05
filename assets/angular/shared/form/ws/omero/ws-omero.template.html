@@ -1,0 +1,41 @@
+<div class="container">
+  <div class="row mt-3 form-group">
+    <div class="row">
+      <table class="table">
+        <thead>
+          <tr>
+            <ng-container *ngFor="let header of field.columns"><th>{{ header.label }}</th></ng-container>
+            <th>RDMP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of field.workspaces">
+            <ng-container *ngFor="let column of field.columns">
+              <td *ngIf="column.show != false">
+                <span *ngIf="column.link != null; else noProcessing "><a href="/{{ branding }}/{{ portal }}/{{ column.link.pattern}}"></a></span>
+                <ng-template #multivalue></ng-template>
+                <ng-template #noProcessing><span >{{ item[column.property] }}</span></ng-template>
+              </td></ng-container>
+              <td>
+                <span *ngIf="item.rdmp; else isNotLinked ">
+                  <button disabled type="button" class="btn btn-success btn-block" *ngIf="item.rdmp.info.rdmp === field.rdmp"> Linked </button>
+                  <button disabled type="button" class="btn btn-info btn-block" *ngIf="item.rdmp.info.rdmp != field.rdmp"> Linked to another RDMP</button>
+                </span>
+                <ng-template #isNotLinked>
+                  <button type="button" class="btn btn-info btn-block" (click)="field.linkWorkspace(item.id)"> Link </button>
+                </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div *ngIf="field.loading" class="row">
+        <img class="center-block" src="/images/loading.svg">
+      </div>
+      <div>
+      </div>
+    </div>
+    <div class="row mt-3 form-group">
+      <button type="button" class="btn btn-default" (click)="field.sendToRDMP()">{{ field.backToRDMP }}</button>
+    </div>
+</div>

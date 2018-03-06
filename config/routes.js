@@ -211,7 +211,7 @@ module.exports.routes = {
   *
   */
 
-  'post /:branding/:portal/ws/omero/projects': 'typescript/OmeroController.projects',
-
+  'get /:branding/:portal/ws/omero/projects': 'typescript/OmeroController.projects',
+  'post /:branding/:portal/ws/omero/login': 'typescript/OmeroController.login',
 
 };

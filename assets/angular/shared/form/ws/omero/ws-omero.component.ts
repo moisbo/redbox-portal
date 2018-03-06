@@ -35,6 +35,9 @@ export class OmeroField extends FieldBase<any> {
   rdmpLocation: string;
   name: string;
 
+  hasSession: boolean;
+
+  loginMessageForm: any;
   loading: boolean;
 
   constructor(options: any, injector: any) {
@@ -76,16 +79,38 @@ export class OmeroField extends FieldBase<any> {
 
   projects(){
     this.loading = true;
-    this.omeroService.projects("XXX", "XXX")
+    this.omeroService.projects()
     .then(response => {
       if(response.projects){
         this.workspaces = response.projects.data;
         this.loading = false;
+        this.hasSession = true;
       }
     }).catch(response => {
       this.loading = false;
-      debugger;
+      this.hasSession = false;
     })
+  }
+
+  login(value: any) {
+    if(value.username && value.password) {
+      this.omeroService.login(value.username, value.password)
+      .then(response => {
+        if(response.status && response.login){
+        this.projects();
+      }else {
+        throw new Error();
+      }
+      })
+      .catch(error => {
+        this.loginMessageForm.message = 'Error Login in; Please provide username and password';
+        this.loginMessageForm.class = 'danger';
+        console.log(error);
+      })
+    }else {
+      this.loginMessageForm.message = 'Please include username and password';
+      this.loginMessageForm.class = 'danger';
+    }
   }
 
 }

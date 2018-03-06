@@ -59,7 +59,7 @@ export module Controllers {
         const cookieJar = WorkspaceService.getCookies(cookies);
         const info = {
           csrf: csrf.data,
-          sessionid: WorkspaceService.getCookieValue(cookieJar),
+          sessionid: WorkspaceService.getCookieValue(cookieJar, 'sessionid'),
           sessionUuid: sessionUuid
         };
         const userId = req.user.id;
@@ -68,7 +68,7 @@ export module Controllers {
       .subscribe(response => {
         sails.log.debug('login');
         sails.log.debug(response);
-        const data = {status: true, projects: JSON.parse(response)};
+        const data = {status: true, login: true};
         this.ajaxOk(req, res, null, data);
       }, error => {
         const errorMessage = `Failed to get projects for user ${user.username}`;
@@ -81,39 +81,21 @@ export module Controllers {
       if (!req.isAuthenticated()) {
         this.ajaxFail(req, res, `User not authenticated`);
       } else {
-        const user = {
-          username: req.param('username') || '',
-          password: req.param('password') || ''
-        };
-        let csrf: any = {};
-
-        OmeroService.csrf(this.config)
+        const userId = req.user.id;
+        WorkspaceService.userInfo(userId)
         .flatMap(response => {
-          sails.log.debug('csrf');
-          csrf = JSON.parse(response);
-          sails.log.debug(csrf.data);
-          return OmeroService.login(this.config, csrf.data, user);
-        })
-        .flatMap(response => {
-          sails.log.debug('login');
-          sails.log.debug('csrf: ' + csrf.data);
-
-          const cookies = response.headers['set-cookie']
-
-          const body = JSON.parse(response.body);
-          const login = body.eventContext;
-          const sessionUuid = login.sessionUuid;
-          return OmeroService.projects(this.config, csrf.data, cookies, sessionUuid);
+          sails.log.debug('userInfo');
+          const appId = this.config.appId;
+          const app = response.apps[appId];
+          return OmeroService.projects(this.config, app.csrf, app.sessionid, app.sessionUuid);
         })
         .subscribe(response => {
           sails.log.debug('projects');
-          sails.log.debug(response);
           const data = {status: true, projects: JSON.parse(response)};
           this.ajaxOk(req, res, null, data);
         }, error => {
-          const errorMessage = `Failed to get projects for user ${user.username}`;
+          const errorMessage = `Failed to get projects for user ${req.user.username}`;
           sails.log.error(errorMessage);
-          sails.log.error(error);
           this.ajaxFail(req, res, errorMessage, error);
         });
       }

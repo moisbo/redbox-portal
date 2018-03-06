@@ -50,13 +50,10 @@ export module Services {
       return Observable.fromPromise(post);
     }
 
-    projects(config: any, csrf: string, cookies: any, sessionUuid: string) {
-      const cookieJar = WorkspaceService.getCookies(cookies);
+    projects(config: any, csrf: string, sessionid: string, sessionUuid: string) {
       let jar = request.jar();
       jar = WorkspaceService.cookieJar(jar, config, 'csrftoken', csrf);
-      jar = WorkspaceService.cookieJar(
-        jar, config, 'sessionid', WorkspaceService.getCookieValue(cookieJar, 'sessionid')
-      );
+      jar = WorkspaceService.cookieJar(jar, config, 'sessionid', sessionid);
       const get = request({
         uri: `${config.host}/api/v0/m/projects/`,
         jar: jar,

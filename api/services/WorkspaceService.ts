@@ -17,6 +17,7 @@ export module Services {
       'getRecordMeta',
       'updateRecordMeta',
       'registerUserApp',
+      'userInfo',
       'getCookies',
       'getCookieValue',
       'cookieJar'
@@ -98,8 +99,10 @@ export module Services {
   }
 
   registerUserApp(userId: any, appId: string, info: any) {
-    const app = 'app.' + appId;
-    var data = { '$set': {app: info}};
+    // TODO: Add ability to update user apps
+    var data = {apps: {}}
+    data.apps[appId] = info;
+    sails.log.debug('registerUserApp');
     return super.getObservable(
       User.update({id: userId}, data)
     );

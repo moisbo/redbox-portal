@@ -42,7 +42,7 @@
                     <button disabled type="button" class="btn btn-info btn-block" *ngIf="item.rdmp.info.rdmp != field.rdmp"> Linked to another RDMP</button>
                   </span>
                   <ng-template #isNotLinked>
-                    <button type="button" class="btn btn-info btn-block" (click)="field.linkWorkspace(item.id)"> Link </button>
+                    <button type="button" disabled class="btn btn-info btn-block" (click)="field.linkWorkspace(item.id)"> Link </button>
                   </ng-template>
                 </td>
               </tr>

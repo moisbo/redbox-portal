@@ -53,6 +53,7 @@ export class OmeroField extends FieldBase<any> {
     this.backToRDMP = options['backToRDMP'] || 'go back';
     this.revokeMessage = options['revokeMessage'] || '';
 
+    this.setRDMPLocation();
     this.projects();
   }
 
@@ -77,6 +78,17 @@ export class OmeroField extends FieldBase<any> {
     return this.value;
   }
 
+  setRDMPLocation() {
+    const params = (new URL(document.location)).searchParams; //How compatible is this with browsers?
+    this.rdmp = params.get('rdmp');
+    this.rdmpLocation = this.omeroService.recordURL + '/' + this.rdmp + '#workspaces';
+  }
+
+  sendToRDMP() {
+    console.log('send location back');
+    document.location = this.rdmpLocation;
+  }
+
   projects(){
     this.loading = true;
     this.omeroService.projects()
@@ -93,6 +105,7 @@ export class OmeroField extends FieldBase<any> {
   }
 
   login(value: any) {
+    this.loading = true;
     if(value.username && value.password) {
       this.omeroService.login(value.username, value.password)
       .then(response => {
@@ -103,11 +116,13 @@ export class OmeroField extends FieldBase<any> {
       }
       })
       .catch(error => {
+        this.loading = false;
         this.loginMessageForm.message = 'Error Login in; Please provide username and password';
         this.loginMessageForm.class = 'danger';
         console.log(error);
       })
     }else {
+      this.loading = false;
       this.loginMessageForm.message = 'Please include username and password';
       this.loginMessageForm.class = 'danger';
     }

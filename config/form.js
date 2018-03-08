@@ -400,14 +400,14 @@ module.exports.form = {
                       vocabId: 'Parties AND repository_name:People',
                       sourceType: 'mint',
                       fieldNames: [{
-                        'text_full_name': 'text_full_name'
+                        'text_full_name': 'dc_full_name'
                       }, {
-                        'full_name_honorific': 'text_full_name_honorific'
+                        'full_name_honorific': 'dc_name_display'
                       }, {
                         'email': 'Email[0]'
                       }],
-                      searchFields: 'text_given_name,text_family_name,text_full_name,text_full_name_honorific',
-                      titleFieldArr: ['text_full_name'],
+                      searchFields: 'dc_full_name, Given_Name, Family_Name, Email',
+                      titleFieldArr: ['dc_full_name'],
                       titleFieldDelim: '',
                       nameColHdr: '@dmpt-people-tab-name-hdr',
                       emailColHdr: '@dmpt-people-tab-email-hdr',
@@ -438,14 +438,14 @@ module.exports.form = {
                         vocabId: 'Parties AND repository_name:People',
                         sourceType: 'mint',
                         fieldNames: [{
-                          'text_full_name': 'text_full_name'
+                          'text_full_name': 'dc_full_name'
                         }, {
-                          'full_name_honorific': 'text_full_name_honorific'
+                          'full_name_honorific': 'dc_name_display'
                         }, {
                           'email': 'Email[0]'
                         }],
-                        searchFields: 'text_given_name,text_family_name,text_full_name,text_full_name_honorific',
-                        titleFieldArr: ['text_full_name'],
+                        searchFields: 'dc_full_name, Given_Name, Family_Name, Email',
+                        titleFieldArr: ['dc_full_name'],
                         titleFieldDelim: '',
                         nameColHdr: '@dmpt-people-tab-name-hdr',
                         emailColHdr: '@dmpt-people-tab-email-hdr',
@@ -479,14 +479,14 @@ module.exports.form = {
                             vocabId: 'Parties AND repository_name:People',
                             sourceType: 'mint',
                             fieldNames: [{
-                              'text_full_name': 'text_full_name'
+                              'text_full_name': 'dc_full_name'
                             }, {
-                              'full_name_honorific': 'text_full_name_honorific'
+                              'full_name_honorific': 'dc_name_display'
                             }, {
                               'email': 'Email[0]'
                             }],
-                            searchFields: 'text_given_name,text_family_name,text_full_name,text_full_name_honorific',
-                            titleFieldArr: ['text_full_name'],
+                            searchFields: 'dc_full_name, Given_Name, Family_Name, Email',
+                            titleFieldArr: ['dc_full_name'],
                             titleFieldDelim: '',
                             nameColHdr: '@dmpt-people-tab-name-hdr',
                             emailColHdr: '@dmpt-people-tab-email-hdr',
@@ -517,14 +517,14 @@ module.exports.form = {
                         vocabId: 'Parties AND repository_name:People',
                         sourceType: 'mint',
                         fieldNames: [{
-                          'text_full_name': 'text_full_name'
+                          'text_full_name': 'dc_full_name'
                         }, {
-                          'full_name_honorific': 'text_full_name_honorific'
+                          'full_name_honorific': 'dc_name_display'
                         }, {
                           'email': 'Email[0]'
                         }],
-                        searchFields: 'text_given_name,text_family_name,text_full_name,text_full_name_honorific',
-                        titleFieldArr: ['text_full_name'],
+                        searchFields: 'dc_full_name, Given_Name, Family_Name, Email',
+                        titleFieldArr: ['dc_full_name'],
                         titleFieldDelim: '',
                         nameColHdr: '@dmpt-people-tab-name-hdr',
                         emailColHdr: '@dmpt-people-tab-email-hdr',

@@ -16,7 +16,8 @@ export module Services {
     protected _exportedMethods: any = [
       'csrf',
       'login',
-      'projects'
+      'projects',
+      'updateProjectMeta'
     ];
 
     constructor() {
@@ -64,6 +65,46 @@ export module Services {
       });
       return Observable.fromPromise(get);
     }
+
+    updateProjectMeta(config: any, app: any, project: any, meta: any){
+      let jar = request.jar();
+      jar = WorkspaceService.cookieJar(jar, config, 'csrftoken', app.csrf);
+      jar = WorkspaceService.cookieJar(jar, config, 'sessionid', app.sessionid);
+      const post = request({
+        uri: `${config.host}/webclient/annotate_map/`,
+        method: 'POST',
+        jar: jar,
+        formData: {
+          project: project.id,
+          annId: project.annId,
+          mapAnnotation: project.annotation
+        },
+        headers: {
+          'X-CSRFToken': app.csrf,
+          'sessionUuid': app.sessionUuid
+        }
+      });
+      return Observable.fromPromise(post);
+    }
+
+    annotations(config: any, app: any, project:any){
+      //https://omero-dev.research.uts.edu.au/webclient/api/annotations/?type=map&project=2&_=1520396924499
+      //Return:
+      //{"annotations": [{"description": null, "class": "MapAnnotationI", "date": "2018-03-07T06:28:24Z", "link": {"owner": {"id": 2}, "date": "2018-03-07T06:28:24Z", "id": 5, "parent": {"id": 2, "name": "test-project", "class": "ProjectI"}, "permissions": {"canAnnotate": true, "canEdit": true, "canDelete": true, "canLink": true}}, "owner": {"id": 2}, "values": [["stash", "123123123"]], "ns": "openmicroscopy.org/omero/client/mapAnnotation", "id": 5, "permissions": {"canAnnotate": true, "canEdit": true, "canDelete": true, "canLink": true}}], "experimenters": [{"lastName": "Sacal Bonequi", "omeName": "135553", "id": 2, "firstName": "Moises"}]}
+      let jar = request.jar();
+      jar = WorkspaceService.cookieJar(jar, config, 'csrftoken', app.csrf);
+      jar = WorkspaceService.cookieJar(jar, config, 'sessionid', app.sessionid);
+      const get = request({
+        uri: `${config.host}/webclient/api/annotations/type=map&project=${project.id}`,
+        jar: jar,
+        headers: {
+          'X-CSRFToken': app.csrf,
+          'sessionUuid': app.sessionUuid
+        }
+      });
+      return Observable.fromPromise(get);
+    }
+
 
   }
 }

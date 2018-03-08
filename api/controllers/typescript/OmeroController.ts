@@ -101,6 +101,41 @@ export module Controllers {
       }
     }
 
+    linkWorkspace(req, res) {
+      if (!req.isAuthenticated()) {
+        this.ajaxFail(req, res, `User not authenticated`);
+      } else {
+        const userId = req.user.id;
+        const projectId = req.param('projectId');
+        const rdmpId = req.param('rdmpId');
+        const project = {
+          id: req.param('project')
+        };
+        let app = {};
+        WorkspaceService.userInfo(userId)
+        .flatMap(response => {
+          sails.log.debug('userInfo');
+          const appId = this.config.appId;
+          app = response.apps[appId];
+          return WorkspaceService.createWorkspaceRecord(this.config, project, 'draft');
+        }).flatMap(response => {
+          const meta = {
+            key: 'stash',
+            value: rdmpId + '.' + response.workspaceId
+          };
+        return OmeroService.updateProjectMeta(this.config, app, project, meta);
+        })
+        .subscribe(response => {
+          sails.log.debug('linkWorkspace');
+          const data = {status: true, projects: JSON.parse(response)};
+          this.ajaxOk(req, res, null, data);
+        }, error => {
+          const errorMessage = `Failed to link project for user ${req.user.username}`;
+          sails.log.error(errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
+        });
+    }
+
   }
 
 }

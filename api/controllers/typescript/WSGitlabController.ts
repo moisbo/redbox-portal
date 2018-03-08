@@ -238,7 +238,8 @@ export module Controllers {
         })
         .flatMap(user => {
           gitlab = user.accessToken.gitlab;
-          return WSGitlabService.createWorkspaceRecord(this.config, project, 'draft');
+          const username = req.user.username;
+          return WSGitlabService.createWorkspaceRecord(this.config, username, project, 'draft');
         }).flatMap(response => {
           workspaceId = response.oid;
           sails.log.debug('addWorkspaceInfo');

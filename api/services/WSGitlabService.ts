@@ -201,72 +201,78 @@ export module Services {
     updateUser(userId: string, gitlab: any) {
       //TODO: Update without removing other accessTokens.
       return super.getObservable(
-        User.update({id: userId},{accessToken: { gitlab: gitlab}})
-      );
-    }
-
-    revokeToken(userId: string) {
-      return super.getObservable(
-        //TODO: Update without removing other accessTokens.
-        User.update({id: userId},
-        {accessToken: { gitlab: {} } })
-      );
-    }
-
-    userInfo(userId: string) {
-      return super.getObservable(
-        User.findOne({ id: userId })
-      )
-    }
-
-    provisionerUser(username: string) {
-      return super.getObservable(
-        User.findOne({username: username})
-      )
-    }
-
-    //**REDBOX-PORTAL-API**//
-    // TODO: Move section to a different file
-
-    createWorkspaceRecord(config: any, project: any, workflowStage: string) {
-      // TODO: how to get the workflowStage??
-      // TODO: Get the project metadata from the form, move this logic to the controller
-      const post = request({
-      uri: config.brandingAndPortalUrl + `/api/records/metadata/${config.recordType}`,
-      method: 'POST',
-      body: {
-        metadata: {
-          title: project.namespace + '/' + project.name,
-          description: project.description,
-          type: 'GitLab'
-        },
-        workflowStage: workflowStage
-      },
-      json: true,
-      headers: config.redboxHeaders
-    });
-    return Observable.fromPromise(post);
+      User.update({id: userId},{accessToken: { gitlab: gitlab}})
+    );
   }
 
-  getRecordMeta(config: any, rdmp: string) {
-    const get = request({
-      uri: config.brandingAndPortalUrl + '/api/records/metadata/' + rdmp,
-      json: true,
-      headers: config.redboxHeaders
-    });
-    return Observable.fromPromise(get);
+  revokeToken(userId: string) {
+    return super.getObservable(
+      //TODO: Update without removing other accessTokens.
+      User.update({id: userId},
+      {accessToken: { gitlab: {} } })
+    );
   }
 
-  updateRecordMeta(config: any, record: any, id: string) {
+  userInfo(userId: string) {
+    return super.getObservable(
+      User.findOne({ id: userId })
+    )
+  }
+
+  provisionerUser(username: string) {
+    return super.getObservable(
+      User.findOne({username: username})
+    )
+  }
+
+  //**REDBOX-PORTAL-API**//
+  // TODO: Move section to a different file
+
+  createWorkspaceRecord(config: any, username: string, project: any, workflowStage: string) {
+    // TODO: how to get the workflowStage??
+    // TODO: Get the project metadata from the form, move this logic to the controller
     const post = request({
-      uri: config.brandingAndPortalUrl + '/api/records/metadata/' + id,
-      method: 'PUT',
-      body: record,
-      json: true,
-      headers: config.redboxHeaders
-    });
-    return Observable.fromPromise(post);
-  }
+    uri: config.brandingAndPortalUrl + `/api/records/metadata/${config.recordType}`,
+    method: 'POST',
+    body: {
+      authorization: {
+        edit: [username],
+        view: [username],
+        editPending:[],
+        viewPending:[]
+      },
+      metadata: {
+        title: project.namespace + '/' + project.name,
+        description: project.description,
+        type: 'GitLab'
+      },
+      workflowStage: workflowStage
+    },
+    json: true,
+    headers: config.redboxHeaders
+  });
+  return Observable.fromPromise(post);
+}
+
+getRecordMeta(config: any, rdmp: string) {
+  const get = request({
+    uri: config.brandingAndPortalUrl + '/api/records/metadata/' + rdmp,
+    json: true,
+    headers: config.redboxHeaders
+  });
+  return Observable.fromPromise(get);
+}
+
+updateRecordMeta(config: any, record: any, id: string) {
+  const post = request({
+    uri: config.brandingAndPortalUrl + '/api/records/metadata/' + id,
+    method: 'PUT',
+    body: record,
+    json: true,
+    headers: config.redboxHeaders
+  });
+  return Observable.fromPromise(post);
+}
 
 }
 

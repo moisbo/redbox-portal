@@ -58,13 +58,19 @@ export module Services {
       return jar;
     }
 
-    createWorkspaceRecord(config: any, project: any, workflowStage: string) {
+    createWorkspaceRecord(config: any, username: string, project: any, workflowStage: string) {
       // TODO: how to get the workflowStage??
       // TODO: Get the project metadata from the form, move this logic to the controller
       const post = request({
       uri: config.brandingAndPortalUrl + `/api/records/metadata/${config.recordType}`,
       method: 'POST',
       body: {
+        authorization: {
+          "edit": [username],
+          "view": [username],
+          "editPending":[],
+          "viewPending":[]
+        },
         metadata: {
           title: project.namespace + '/' + project.name,
           description: project.description,

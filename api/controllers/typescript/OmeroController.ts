@@ -117,7 +117,8 @@ export module Controllers {
           sails.log.debug('userInfo');
           const appId = this.config.appId;
           app = response.apps[appId];
-          return WorkspaceService.createWorkspaceRecord(this.config, project, 'draft');
+          const username = req.user.username;
+          return WorkspaceService.createWorkspaceRecord(this.config, username, project, 'draft');
         }).flatMap(response => {
           const meta = {
             key: 'stash',

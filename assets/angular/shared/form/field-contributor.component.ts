@@ -64,11 +64,12 @@ export class ContributorField extends FieldBase<any> {
     this.showHeader = options['showHeader'] || true;
     this.roles = options['roles'] || [];
     this.value = options['value'] || this.setEmptyValue();
+    this.fieldNames = options['fieldNames'] || [];
     const textFullNameFieldName = _.find(this.fieldNames, fieldNameObject => {
       return fieldNameObject['text_full_name'] != undefined;
     });
-    if(textFullNameFieldName ! = null) {
-    this.fullNameResponseField = textFullNameFieldName['text_full_name'];
+    if(textFullNameFieldName != null) {
+      this.fullNameResponseField = textFullNameFieldName['text_full_name'];
     }
     this.validationMessages = options['validationMessages'] || {required: {
       email: this.getTranslated(options['validation_required_email'], 'Email required'),

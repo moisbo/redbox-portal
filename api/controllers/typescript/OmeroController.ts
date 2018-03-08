@@ -123,7 +123,7 @@ export module Controllers {
             key: 'stash',
             value: rdmpId + '.' + response.workspaceId
           };
-        return OmeroService.updateProjectMeta(this.config, app, project, meta);
+          return OmeroService.updateProjectMeta(this.config, app, project, meta);
         })
         .subscribe(response => {
           sails.log.debug('linkWorkspace');
@@ -134,6 +134,7 @@ export module Controllers {
           sails.log.error(errorMessage);
           this.ajaxFail(req, res, errorMessage, error);
         });
+      }
     }
 
   }

@@ -1209,7 +1209,7 @@ module.exports.form = {
                     },
                     {
                       class: "AnchorOrButton",
-                      viewOnly: false,
+                      viewOnly: true,
                       definition: {
                         label: 'GitLab',
                         value: '/@branding/@portal/record/workspace/edit?rdmp=@oid',
@@ -1221,7 +1221,7 @@ module.exports.form = {
                     },
                     {
                       class: "AnchorOrButton",
-                      viewOnly: false,
+                      viewOnly: true,
                       definition: {
                         label: 'OMERO',
                         value: '/@branding/@portal/record/omero/edit?rdmp=@oid',

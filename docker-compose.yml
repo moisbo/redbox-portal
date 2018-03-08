@@ -2,7 +2,7 @@ version: '3.1'
 services:
   redboxportal:
     build: .
-    image: moisbo/redbox-portal:develop_gitlab
+    image: moisbo/redbox-portal:develop
     ports:
        - "1500:1500"
     restart: on-failure

@@ -40,6 +40,8 @@ export class OmeroField extends FieldBase<any> {
   loginMessageForm: any;
   loading: boolean;
 
+  creation: Creation;
+
   constructor(options: any, injector: any) {
     super(options, injector);
     this.omeroService = this.getFromInjector(OmeroService);
@@ -91,6 +93,7 @@ export class OmeroField extends FieldBase<any> {
 
   projects(){
     this.loading = true;
+    this.workspaces = [];
     this.omeroService.projects()
     .then(response => {
       if(response.projects){
@@ -128,6 +131,33 @@ export class OmeroField extends FieldBase<any> {
     }
   }
 
+  loadCreateWorkspaceModal() {
+    this.creation = new Creation();
+    jQuery('#createModal').modal('show');
+  }
+
+  create(value: any) {
+    console.log(value)
+    if(value.name && value.description) {
+      this.loading = true;
+      this.creation.name = value.name;
+      this.creation.description = value.description;
+      this.omeroService.create(this.creation)
+      .then(response => {
+        console.log(response)
+        this.loading = false;
+      })
+      .catch(error => {
+        console.table(error)
+        this.loading = false;
+      });
+    }else{
+      this.loading = false;
+      this.creation.message = 'Please include name and description';
+      this.creation.alert = 'danger';
+    }
+  }
+
 }
 
 declare var aotMode;
@@ -148,4 +178,11 @@ if(typeof aotMode == 'undefined') {
 export class OmeroComponent extends SimpleComponent {
   field: OmeroField;
 
+}
+
+class Creation {
+  name: string;
+  description: string;
+  message: string;
+  alert: string;
 }

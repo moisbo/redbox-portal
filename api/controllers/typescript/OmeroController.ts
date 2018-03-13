@@ -20,7 +20,8 @@ export module Controllers {
 
     protected _exportedMethods: any = [
       'login',
-      'projects'
+      'projects',
+      'create'
     ];
     protected config: any;
 
@@ -60,7 +61,9 @@ export module Controllers {
         const info = {
           csrf: csrf.data,
           sessionid: WorkspaceService.getCookieValue(cookieJar, 'sessionid'),
-          sessionUuid: sessionUuid
+          sessionUuid: sessionUuid,
+          memberOfGroups: login.memberOfGroups,
+          groupId: login.groupId
         };
         const userId = req.user.id;
         return WorkspaceService.registerUserApp(userId, this.config.appId, info);
@@ -96,6 +99,34 @@ export module Controllers {
         }, error => {
           const errorMessage = `Failed to get projects for user ${req.user.username}`;
           sails.log.error(errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
+        });
+      }
+    }
+
+    create(req, res) {
+      if (!req.isAuthenticated()) {
+        this.ajaxFail(req, res, `User not authenticated`);
+      } else {
+        const userId = req.user.id;
+        WorkspaceService.userInfo(userId)
+        .flatMap(response => {
+          sails.log.debug('userInfo');
+          const appId = this.config.appId;
+          const app = response.apps[appId];
+          const project = req.param('creation');
+          project.type = 'project';
+          return OmeroService.createContainer(this.config, app, project);
+        })
+        .subscribe(response => {
+          sails.log.debug('createProject');
+          sails.log.debug(response)
+          const data = {status: true, create: response};
+          this.ajaxOk(req, res, null, data);
+        }, error => {
+          const errorMessage = `Failed to create project for user ${req.user.username}`;
+          sails.log.error(errorMessage);
+          sails.log.error(error);
           this.ajaxFail(req, res, errorMessage, error);
         });
       }

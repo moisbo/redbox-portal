@@ -17,7 +17,8 @@ export module Services {
       'csrf',
       'login',
       'projects',
-      'updateProjectMeta'
+      'updateProjectMeta',
+      'createContainer'
     ];
 
     constructor() {
@@ -64,6 +65,28 @@ export module Services {
         }
       });
       return Observable.fromPromise(get);
+    }
+
+    createContainer(config: any, app: any, project: any) {
+      let jar = request.jar();
+      jar = WorkspaceService.cookieJar(jar, config, 'csrftoken', app.csrf);
+      jar = WorkspaceService.cookieJar(jar, config, 'sessionid', app.sessionid);
+      const post = request({
+        uri: `${config.host}/webclient/action/addnewcontainer/`,
+        method: 'POST',
+        jar: jar,
+        formData: {
+          "name": project.name,
+          "folder_type": project.type,
+          "description": project.description,
+          "owner": project.owner || ''
+        },
+        headers: {
+          'X-CSRFToken': app.csrf,
+          'sessionUuid': app.sessionUuid
+        }
+      });
+      return Observable.fromPromise(post);
     }
 
     updateProjectMeta(config: any, app: any, project: any, meta: any){

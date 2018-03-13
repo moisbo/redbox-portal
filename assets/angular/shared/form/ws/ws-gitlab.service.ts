@@ -10,7 +10,7 @@ import {ConfigService} from "../../config-service";
 export class WSGitlabService extends BaseService {
 
   protected baseUrl: any;
-  public recordURL: string = this.brandingAndPortalUrl + '/record/edit';
+  public recordURL: string = this.brandingAndPortalUrl + '/record/view';
 
   constructor(@Inject(Http) http: Http, @Inject(ConfigService) protected configService: ConfigService) {
     super(http, configService);

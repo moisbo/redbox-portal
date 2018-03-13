@@ -76,10 +76,10 @@ export module Services {
         method: 'POST',
         jar: jar,
         formData: {
-          "name": project.name,
-          "folder_type": project.type,
-          "description": project.description,
-          "owner": project.owner || ''
+          name: project.name,
+          folder_type: project.type,
+          description: project.description,
+          owner: project.owner || ''
         },
         headers: {
           'X-CSRFToken': app.csrf,

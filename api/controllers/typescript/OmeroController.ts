@@ -120,8 +120,12 @@ export module Controllers {
         })
         .subscribe(response => {
           sails.log.debug('createProject');
-          sails.log.debug(response)
-          const data = {status: true, create: response};
+          sails.log.debug(response);
+          let status = true;
+          if(response.bad === 'true'){
+            status = false;
+          }
+          const data = {status: status, create: response};
           this.ajaxOk(req, res, null, data);
         }, error => {
           const errorMessage = `Failed to create project for user ${req.user.username}`;

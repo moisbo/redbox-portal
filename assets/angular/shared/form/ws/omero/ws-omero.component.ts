@@ -137,19 +137,22 @@ export class OmeroField extends FieldBase<any> {
   }
 
   create(value: any) {
-    console.log(value)
     if(value.name && value.description) {
       this.loading = true;
       this.creation.name = value.name;
       this.creation.description = value.description;
+      this.creation.message = 'Creting...';
+      this.creation.alert = 'warning';
       this.omeroService.create(this.creation)
       .then(response => {
-        console.log(response)
         this.loading = false;
+        jQuery('#createModal').modal('hide');
+        this.projects();
       })
       .catch(error => {
         console.table(error)
-        this.loading = false;
+        this.creation.message = 'There was a problem creating your workspace';
+        this.creation.alert = 'danger';
       });
     }else{
       this.loading = false;
@@ -181,8 +184,8 @@ export class OmeroComponent extends SimpleComponent {
 }
 
 class Creation {
-  name: string;
-  description: string;
-  message: string;
-  alert: string;
+  name: string = '';
+  description: string = '';
+  message: string = '';
+  alert: string = '';
 }

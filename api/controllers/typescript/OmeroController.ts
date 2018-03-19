@@ -178,10 +178,7 @@ export module Controllers {
           annotations = (JSON.parse(response)).annotations;
           project.mapAnnotation = annotations;
           //Check whether there is a workspace created
-          sails.log.debug('createWorkspaceRecord');
-          const theAnn = this.findAnnotation('stash', project.mapAnnotation);
-          sails.log.debug(theAnn);
-          const ann = _.first(theAnn);
+          const ann = _.first(this.findAnnotation('stash', project.mapAnnotation));
           if(!ann) {
             rowAnnotation = undefined;
             idAnnotation = undefined;
@@ -201,6 +198,7 @@ export module Controllers {
     }
 
     createAnnotation(app, project, rowAnnotation, idAnnotation, annotations, username, rdmpId){
+      sails.log.debug('createWorkspaceRecord');
       return WorkspaceService.provisionerUser(this.config.provisionerUser)
       .flatMap(response => {
         sails.log.debug('provisionerUser:createWorkspaceRecord');
@@ -238,12 +236,10 @@ export module Controllers {
 
   findAnnotation(annotation: string, annotations: string[][]) {
     //Return annotation id where string == annotation[][]
-    sails.log.debug('findAnnotation');
     return annotations.map((anns, index) => {
     const row = anns.values.findIndex(an => an[0] === annotation);
     return {index: index, id: anns.id, row: row != -1 ? row : null}
   }).filter((cur) => {
-    sails.log.debug(cur);
     return cur.row != null;
   });
 }

@@ -1324,7 +1324,7 @@ module.exports.form = {
     },
     "omero": {
       name: 'omero',
-      type: 'omero',
+      type: 'workspace',
       skipValidationOnSave: true,
       editCssClasses: 'row col-md-12',
       viewCssClasses: 'row col-md-offset-1 col-md-10',

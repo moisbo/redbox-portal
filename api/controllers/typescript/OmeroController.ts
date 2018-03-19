@@ -176,34 +176,18 @@ export module Controllers {
         }).flatMap(response => {
           sails.log.debug('annotations');
           annotations = (JSON.parse(response)).annotations;
-          project.annId = annotations.length > 0 ? annotations.id : null;
-          project.mapAnnotation = annotations.values;
+          project.mapAnnotation = annotations;
           //Check whether there is a workspace created
-
           sails.log.debug('createWorkspaceRecord');
-          const ann = _.first(this.findAnnotation('stash', project.mapAnnotation || []));
-          if(ann) {
-            rowAnnotation = ann.row;
-            idAnnotation = ann.id;
-          }
-
-          return WorkspaceService.provisionerUser(this.config.provisionerUser);
-        }).flatMap(response => {
-          sails.log.debug('provisionerUser:createWorkspaceRecord');
-          this.config.redboxHeaders['Authorization'] = 'Bearer ' + response.token;
-          return WorkspaceService.createWorkspaceRecord(this.config, username, project, 'draft');
-        }).flatMap(response => {
-          const create = this.mapAnnotation(
-            rowAnnotation,
-            this.getAnnotation(idAnnotation, annotations),
-            'stash',
-            `${rdmpId}.${response.oid}`
-          );
-          project.annId = idAnnotation || null;
-          project.mapAnnotation = create.values;
-          return OmeroService.annotateMap(this.config, app, project);
-        })
-        .subscribe(response => {
+          const theAnn = this.findAnnotation('stash', project.mapAnnotation);
+          sails.log.debug(theAnn);
+          const ann = _.first(theAnn);
+          if(!ann) {
+            rowAnnotation = undefined;
+            idAnnotation = undefined;
+            return this.createAnnotation(app, project, rowAnnotation, idAnnotation, annotations, username, rdmpId);
+          } else return Observable.of('');
+        }).subscribe(response => {
           sails.log.debug('linkWorkspace');
           const data = {status: true, response};
           this.ajaxOk(req, res, null, data);
@@ -216,6 +200,25 @@ export module Controllers {
       }
     }
 
+    createAnnotation(app, project, rowAnnotation, idAnnotation, annotations, username, rdmpId){
+      return WorkspaceService.provisionerUser(this.config.provisionerUser)
+      .flatMap(response => {
+        sails.log.debug('provisionerUser:createWorkspaceRecord');
+        this.config.redboxHeaders['Authorization'] = 'Bearer ' + response.token;
+        return WorkspaceService.createWorkspaceRecord(this.config, username, project, 'draft');
+      }).flatMap(response => {
+        const create = this.mapAnnotation(
+          rowAnnotation,
+          this.getAnnotation(idAnnotation, annotations),
+          'stash',
+          `${rdmpId}.${response.oid}`
+        );
+        project.annId = idAnnotation || null;
+        project.mapAnnotation = create.values;
+        return OmeroService.annotateMap(this.config, app, project);
+      });
+    }
+
     getAnnotation(id: number, annotations: any) {
       return annotations.find(an => an.id === id);
     }
@@ -223,25 +226,27 @@ export module Controllers {
     mapAnnotation(row: number, annotation: any, key, newValue: string) {
       //OMERO stores annotations as array of arrays. Each element being array[0] property and array[1] value
       if (annotation) {
-        annotation.values[row.toString()][1] = newValue;
-        return annotation;
-      } else {
-        const annotation = {
-          values: [[key, newValue.toString()]]
-        };
-        return annotation;
-      }
+      annotation.values[row.toString()][1] = newValue;
+      return annotation;
+    } else {
+      const annotation = {
+        values: [[key, newValue.toString()]]
+      };
+      return annotation;
     }
+  }
 
-    findAnnotation(annotation: string, annotations: string[][]) {
-      //Return annotation id where string == annotation[][]
-      return annotations.map((anns, index) => {
-        const row = anns.values.findIndex(an => an[0] === annotation);
-        return {index: index, id: anns.id, row: row != -1 ? row : null}
-      }).filter((cur) => {
-        return cur.row != null;
-      });
-    }
+  findAnnotation(annotation: string, annotations: string[][]) {
+    //Return annotation id where string == annotation[][]
+    sails.log.debug('findAnnotation');
+    return annotations.map((anns, index) => {
+    const row = anns.values.findIndex(an => an[0] === annotation);
+    return {index: index, id: anns.id, row: row != -1 ? row : null}
+  }).filter((cur) => {
+    sails.log.debug(cur);
+    return cur.row != null;
+  });
+}
 
 }
 

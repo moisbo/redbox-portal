@@ -18,6 +18,7 @@ export module Services {
       'updateRecordMeta',
       'registerUserApp',
       'userInfo',
+      'provisionerUser',
       'getCookies',
       'getCookieValue',
       'cookieJar'
@@ -26,7 +27,6 @@ export module Services {
     config: any;
     recordType: string;
     formName: string;
-    brandingAndPortalUrl: string;
     parentRecord: string;
     bearer: string;
     redboxHeaders: {};
@@ -61,20 +61,21 @@ export module Services {
     createWorkspaceRecord(config: any, username: string, project: any, workflowStage: string) {
       // TODO: how to get the workflowStage??
       // TODO: Get the project metadata from the form, move this logic to the controller
+      sails.log.debug(config);
       const post = request({
       uri: config.brandingAndPortalUrl + `/api/records/metadata/${config.recordType}`,
       method: 'POST',
       body: {
         authorization: {
-          "edit": [username],
-          "view": [username],
-          "editPending":[],
-          "viewPending":[]
+          edit: [username],
+          view: [username],
+          editPending:[],
+          viewPending:[]
         },
         metadata: {
-          title: project.namespace + '/' + project.name,
+          title: project.title,
           description: project.description,
-          type: 'GitLab'
+          type: project.type
         },
         workflowStage: workflowStage
       },
@@ -117,6 +118,12 @@ export module Services {
   userInfo(userId: string) {
     return super.getObservable(
       User.findOne({ id: userId })
+    )
+  }
+
+  provisionerUser(username: string) {
+    return super.getObservable(
+      User.findOne({username: username})
     )
   }
 

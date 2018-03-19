@@ -91,7 +91,7 @@ export class OmeroField extends FieldBase<any> {
     document.location = this.rdmpLocation;
   }
 
-  projects(){
+  projects() {
     this.loading = true;
     this.workspaces = [];
     this.omeroService.projects()
@@ -141,7 +141,7 @@ export class OmeroField extends FieldBase<any> {
       this.loading = true;
       this.creation.name = value.name;
       this.creation.description = value.description;
-      this.creation.message = 'Creting...';
+      this.creation.message = 'Creating...';
       this.creation.alert = 'warning';
       this.omeroService.create(this.creation)
       .then(response => {
@@ -159,6 +159,21 @@ export class OmeroField extends FieldBase<any> {
       this.creation.message = 'Please include name and description';
       this.creation.alert = 'danger';
     }
+  }
+
+  linkWorkspace(item: any) {
+    const project = {
+      id: item['@id'],
+      title: item['Name'],
+      description: item['Description']
+    }
+    this.omeroService.linkWorkspace(project, this.rdmp)
+    .then(response => {
+      this.projects();
+    })
+    .catch(error => {
+      console.log(error);
+    });
   }
 
 }

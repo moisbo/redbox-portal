@@ -21,7 +21,8 @@ export module Controllers {
     protected _exportedMethods: any = [
       'login',
       'projects',
-      'create'
+      'create',
+      'linkWorkspace'
     ];
     protected config: any;
 
@@ -30,7 +31,15 @@ export module Controllers {
       this.config = {
         host: sails.config.local.workspaces.omero.host,
         serverId: sails.config.local.workspaces.omero.serverId,
-        appId: sails.config.local.workspaces.omero.appId
+        appId: sails.config.local.workspaces.omero.appId,
+        provisionerUser: sails.config.local.workspaces.provisionerUser,
+        recordType: sails.config.local.workspaces.recordType,
+        brandingAndPortalUrl: '',
+        redboxHeaders:  {
+          'Cache-Control': 'no-cache',
+          'Content-Type': 'application/json',
+          'Authorization': '',
+        }
       }
     }
 
@@ -140,40 +149,101 @@ export module Controllers {
       if (!req.isAuthenticated()) {
         this.ajaxFail(req, res, `User not authenticated`);
       } else {
+        this.config.brandingAndPortalUrl = sails.getBaseUrl() + BrandingService.getBrandAndPortalPath(req);
         const userId = req.user.id;
-        const projectId = req.param('projectId');
+        const username = req.user.username;
+        const pro = req.param('project');
         const rdmpId = req.param('rdmpId');
         const project = {
-          id: req.param('project')
+          id: pro.id,
+          title: pro.title,
+          description: pro.description,
+          annId: null,
+          mapAnnotation: [],
+          type: 'OMERO' //TODO: get from form
         };
         let app = {};
+        let annotations = [];
+        let rowAnnotation;
+        let idAnnotation;
+
         WorkspaceService.userInfo(userId)
         .flatMap(response => {
           sails.log.debug('userInfo');
           const appId = this.config.appId;
           app = response.apps[appId];
-          const username = req.user.username;
+          return OmeroService.annotations(this.config, app, project);
+        }).flatMap(response => {
+          sails.log.debug('annotations');
+          annotations = (JSON.parse(response)).annotations;
+          project.annId = annotations.length > 0 ? annotations.id : null;
+          project.mapAnnotation = annotations.values;
+          //Check whether there is a workspace created
+
+          sails.log.debug('createWorkspaceRecord');
+          const ann = _.first(this.findAnnotation('stash', project.mapAnnotation || []));
+          if(ann) {
+            rowAnnotation = ann.row;
+            idAnnotation = ann.id;
+          }
+
+          return WorkspaceService.provisionerUser(this.config.provisionerUser);
+        }).flatMap(response => {
+          sails.log.debug('provisionerUser:createWorkspaceRecord');
+          this.config.redboxHeaders['Authorization'] = 'Bearer ' + response.token;
           return WorkspaceService.createWorkspaceRecord(this.config, username, project, 'draft');
         }).flatMap(response => {
-          const meta = {
-            key: 'stash',
-            value: rdmpId + '.' + response.workspaceId
-          };
-          return OmeroService.updateProjectMeta(this.config, app, project, meta);
+          const create = this.mapAnnotation(
+            rowAnnotation,
+            this.getAnnotation(idAnnotation, annotations),
+            'stash',
+            `${rdmpId}.${response.oid}`
+          );
+          project.annId = idAnnotation || null;
+          project.mapAnnotation = create.values;
+          return OmeroService.annotateMap(this.config, app, project);
         })
         .subscribe(response => {
           sails.log.debug('linkWorkspace');
-          const data = {status: true, projects: JSON.parse(response)};
+          const data = {status: true, response};
           this.ajaxOk(req, res, null, data);
         }, error => {
           const errorMessage = `Failed to link project for user ${req.user.username}`;
           sails.log.error(errorMessage);
+          sails.log.error(error);
           this.ajaxFail(req, res, errorMessage, error);
         });
       }
     }
 
-  }
+    getAnnotation(id: number, annotations: any) {
+      return annotations.find(an => an.id === id);
+    }
+
+    mapAnnotation(row: number, annotation: any, key, newValue: string) {
+      //OMERO stores annotations as array of arrays. Each element being array[0] property and array[1] value
+      if (annotation) {
+        annotation.values[row.toString()][1] = newValue;
+        return annotation;
+      } else {
+        const annotation = {
+          values: [[key, newValue.toString()]]
+        };
+        return annotation;
+      }
+    }
+
+    findAnnotation(annotation: string, annotations: string[][]) {
+      //Return annotation id where string == annotation[][]
+      return annotations.map((anns, index) => {
+        const row = anns.values.findIndex(an => an[0] === annotation);
+        return {index: index, id: anns.id, row: row != -1 ? row : null}
+      }).filter((cur) => {
+        return cur.row != null;
+      });
+    }
+
+}
 
 }
 

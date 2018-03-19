@@ -64,5 +64,23 @@ export class OmeroService extends BaseService {
     });
   }
 
+  linkWorkspace(project: any, rdmpId: string) {
+    const wsUrl = this.brandingAndPortalUrl + '/ws/omero/linkWorkspace';
+    return this.http.post(
+      wsUrl, {
+        project: project,
+        rdmpId: rdmpId
+      },
+      this.options
+    )
+    .toPromise()
+    .then((res: any) => {
+      return this.extractData(res);
+    })
+    .catch((res: any) => {
+      return this.extractData(res);
+    });
+  }
+
 
 }

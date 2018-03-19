@@ -55,6 +55,9 @@ export module Services {
       const options = this.getOptions(sails.config.record.baseUrl.redbox+sails.config.record.api.create.url, null, packageType);
 
       options.body = record;
+      sails.log.debug('create');
+      sails.log.debug(sails.config.record.api.create.method);
+      sails.log.debug(request[sails.config.record.api.create.method]);
       sails.log.verbose(options);
       return Observable.fromPromise(request[sails.config.record.api.create.method](options));
     }

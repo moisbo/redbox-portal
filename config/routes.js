@@ -217,6 +217,7 @@ module.exports.routes = {
 
   'get /:branding/:portal/ws/omero/projects': 'typescript/OmeroController.projects',
   'post /:branding/:portal/ws/omero/login': 'typescript/OmeroController.login',
-  'post /:branding/:portal/ws/omero/create': 'typescript/OmeroController.create'
+  'post /:branding/:portal/ws/omero/create': 'typescript/OmeroController.create',
+  'post /:branding/:portal/ws/omero/linkWorkspace': 'typescript/OmeroController.linkWorkspace'
 
 };

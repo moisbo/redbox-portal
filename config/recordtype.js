@@ -114,7 +114,7 @@ module.exports.recordtype = {
     ]
   },
   "omero": {
-    "packageType": "omero",
+    "packageType": "workspace",
     searchFilters: [
       {
         name: "text_title",

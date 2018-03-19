@@ -245,7 +245,6 @@ export module Controllers {
         var recordTypeObservable = RecordTypesService.get(brand, recordType);
 
         recordTypeObservable.subscribe(recordTypeModel => {
-
           if (recordTypeModel) {
             var metadata = body["metadata"];
             var workflowStage = body["workflowStage"];
@@ -300,6 +299,9 @@ export module Controllers {
                 }
 
                 return res.status(201).json(result);
+              }, error => {
+                sails.log.error(error);
+                return res.status(500).json({message: error.message});
               });
 
             });

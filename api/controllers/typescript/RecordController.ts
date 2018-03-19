@@ -263,7 +263,6 @@ export module Controllers {
       //TODO: This is currently hardcoded
       record.metaMetadata.type = recordType;
       record.metadata = metadata;
-
       RecordTypesService.get(brand, recordType).subscribe(recordType => {
         let packageType = recordType.packageType;
         WorkflowStepsService.getFirst(recordType)

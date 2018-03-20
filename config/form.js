@@ -1212,7 +1212,7 @@ module.exports.form = {
                       viewOnly: true,
                       definition: {
                         label: 'GitLab',
-                        value: '/@branding/@portal/record/workspace/edit?rdmp=@oid',
+                        value: '/@branding/@portal/record/workspace/edit?rdmp=@oid?type=gitlab',
                         cssClasses: 'btn btn-large btn-info margin-15',
                         showPencil: false,
                         controlType: 'anchor'
@@ -1224,7 +1224,7 @@ module.exports.form = {
                       viewOnly: true,
                       definition: {
                         label: 'OMERO',
-                        value: '/@branding/@portal/record/omero/edit?rdmp=@oid',
+                        value: '/@branding/@portal/record/workspace/edit?rdmp=@oid?type=omero',
                         cssClasses: 'btn btn-large btn-info margin-15',
                         showPencil: false,
                         controlType: 'anchor'
@@ -1269,8 +1269,8 @@ module.exports.form = {
       ]
     },
     "workspace": {
-      name: 'workspace',
-      type: 'workspace',
+      name: "workspace",
+      type: "workspace",
       skipValidationOnSave: true,
       editCssClasses: 'row col-md-12',
       viewCssClasses: 'row col-md-offset-1 col-md-10',
@@ -1280,16 +1280,7 @@ module.exports.form = {
         "saveSuccess": ["@dmpt-form-save-success"],
         "saveError": ["@dmpt-form-save-error"]
       },
-      fields: [
-        {
-          class: 'Container',
-          compClass: 'TextBlockComponent',
-          viewOnly: false,
-          definition: {
-            value: 'GitLab',
-            type: 'h2'
-          }
-        },
+      fields:[
         {
           class: 'Container',
           compClass: 'TextBlockComponent',
@@ -1300,77 +1291,19 @@ module.exports.form = {
           }
         },
         {
-          class: 'WSGitlabField',
-          showHeader: true,
-          definition: {
-            name: 'workspaces',
-            permissionStep1: 'The provisioner requires permission to create a workspace on your behalf',
-            permissionStep2: 'Stash is requesting from GitLab the following permissions:',
-            permissionRevoke: 'The permissions for this service will be removed. You will require to grant permissions to GitLab again.',
-            permissionList: [
-                'Create Repositories',
-                'Write information into your repositories'
-              ],
-            revokeMessage: 'Revoke Login Consent',
-            backToRDMP: 'Back to your Plan',
-            columns: [
-              {'label': 'Name', 'property': 'name'},
-              {'label': 'Description', 'property': 'description'},
-              {'label': 'Location', 'property': 'web_url'}
-            ]
-          }
-        }
-      ]
-    },
-    "omero": {
-      name: 'omero',
-      type: 'workspace',
-      skipValidationOnSave: true,
-      editCssClasses: 'row col-md-12',
-      viewCssClasses: 'row col-md-offset-1 col-md-10',
-      messages: {
-        "saving": ["@dmpt-form-saving"],
-        "validationFail": ["@dmpt-form-validation-fail-prefix", "@dmpt-form-validation-fail-suffix"],
-        "saveSuccess": ["@dmpt-form-save-success"],
-        "saveError": ["@dmpt-form-save-error"]
-      },
-      fields: [
-        {
-          class: 'Container',
-          compClass: 'TextBlockComponent',
+          class: "LoadableAppsContainer",
+          compClass: "LoadableAppComponent",
           viewOnly: false,
           definition: {
-            value: 'OMERO',
-            type: 'h2'
-          }
-        },
-        {
-          class: 'Container',
-          compClass: 'TextBlockComponent',
-          viewOnly: false,
-          definition: {
-            value: 'Workspaces',
-            type: 'h3'
-          }
-        },
-        {
-          class: 'OmeroField',
-          showHeader: true,
-          definition: {
-            name: 'omero',
-            permissionStep1: 'The provisioner requires permission to create a workspace on your behalf',
-            permissionStep2: 'Stash is requesting from Omero the following permissions:',
-            permissionRevoke: 'The permissions for this service will be removed. You will require to grant permissions to GitLab again.',
-            permissionList: [
-                'Create Repositories',
-                'Write information into your repositories'
-              ],
-            revokeMessage: 'Revoke Login Consent',
-            backToRDMP: 'Back to your Plan',
-            columns: [
-              {'label': 'Name', 'property': 'Name'},
-              {'label': 'Description', 'property': 'Description'},
-              {'label': 'Location', 'property': 'url:project'}
+            label: "Loadable App",
+            help: "Loadable App",
+            name: "LoadableApp",
+            apps: [{
+              provider: "GitlabApp"
+            },
+            {
+              provider: "OMEROApp"
+            }
             ]
           }
         }

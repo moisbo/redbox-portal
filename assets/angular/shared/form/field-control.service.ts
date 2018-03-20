@@ -53,6 +53,7 @@ import { TranslationService } from '../translation-service';
 import { UtilityService } from '../util-service';
 import { WSGitlabComponent, WSGitlabField } from "./ws/ws-gitlab.component";
 import { OmeroComponent, OmeroField } from "./ws/omero/ws-omero.component";
+import { LoadableAppsContainer, LoadableAppComponent } from "./ws/LoadableAppsContainer";
 /**
  * Field / Model Factory Service...
  *
@@ -80,7 +81,8 @@ export class FieldControlService {
     'SelectionField': {'meta': SelectionField, 'comp': [ SelectionFieldComponent, DropdownFieldComponent ]},
     'RelatedObjectDataField': {'meta': RelatedObjectDataField, 'comp': RelatedObjectDataComponent, 'lookupService': 'vocabFieldLookupService'},
     'WSGitlabField': {'meta': WSGitlabField, 'comp': WSGitlabComponent},
-    'OmeroField': {'meta': OmeroField, 'comp': OmeroComponent}
+    'OmeroField': {'meta': OmeroField, 'comp': OmeroComponent},
+    'LoadableAppsContainer': {'meta': LoadableAppsContainer, 'comp': LoadableAppComponent}
   };
   constructor(@Inject(VocabFieldLookupService) private vocabFieldLookupService: VocabFieldLookupService, @Inject(CompleterService) private completerService: CompleterService,
   @Inject(ConfigService) protected configService: ConfigService,

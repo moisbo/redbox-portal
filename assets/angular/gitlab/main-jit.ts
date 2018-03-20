@@ -19,7 +19,7 @@
 
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
-import { DmpModule } from './gitlab.module';
-console.log('Running DMP on JIT');
+import { GitlabModule } from './gitlab.module';
+console.log('Running Gitlab on JIT');
 const aotMode = false;
-platformBrowserDynamic().bootstrapModule(DmpModule);
+platformBrowserDynamic().bootstrapModule(GitlabModule);

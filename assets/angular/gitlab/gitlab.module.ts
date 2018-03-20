@@ -21,14 +21,14 @@ import { NgModule }      from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule, FormsModule} from "@angular/forms";
 import { HttpModule } from '@angular/http';
-import { DmpFormComponent } from './dmp-form.component';
+import { GitlabFormComponent } from './gitlab-form.component';
 import { SharedModule } from '../shared/shared.module';
- 
+
 @NgModule({
   imports:      [ BrowserModule, HttpModule, ReactiveFormsModule, SharedModule ],
-  declarations: [ DmpFormComponent ],
+  declarations: [ GitlabFormComponent ],
   providers:    [ ],
-  bootstrap:    [ DmpFormComponent ],
+  bootstrap:    [ GitlabFormComponent ],
   entryComponents: [ ]
 })
-export class DmpModule { }
+export class GitlabModule { }

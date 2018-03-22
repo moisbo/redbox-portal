@@ -1195,6 +1195,30 @@ module.exports = {
                       }
                     ]
                   }
+                },
+                {
+                  class: "AnchorOrButton",
+                  viewOnly: true,
+                  definition: {
+                    label: 'GitLab',
+                    value: '/@branding/@portal/record/view/@oid?type=gitlab',
+                    cssClasses: 'btn btn-large btn-info margin-15',
+                    showPencil: false,
+                    controlType: 'anchor'
+                  },
+                  variableSubstitutionFields: ['value']
+                },
+                {
+                  class: "AnchorOrButton",
+                  viewOnly: true,
+                  definition: {
+                    label: 'OMERO',
+                    value: '/@branding/@portal/record/view/@oid?type=omero',
+                    cssClasses: 'btn btn-large btn-info margin-15',
+                    showPencil: false,
+                    controlType: 'anchor'
+                  },
+                  variableSubstitutionFields: ['value']
                 }
               ]
             }

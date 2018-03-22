@@ -30,5 +30,22 @@ module.exports.workflow = {
       },
       starting: true
     }
+  },
+  "workspace": {
+    "draft": {
+      config: {
+        workflow: {
+          stage: 'draft',
+          stageLabel: 'Draft',
+        },
+        authorization: {
+          viewRoles: ['Admin', 'Librarians'],
+          editRoles: ['Admin', 'Librarians']
+        },
+        form: 'workspace-1.0-draft'
+      },
+      starting: true
+    }
   }
+
 };

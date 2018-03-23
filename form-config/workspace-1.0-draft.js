@@ -4,6 +4,10 @@
 module.exports = {
   name: 'workspace-1.0-draft',
   type: 'workspace',
+  customAngularApp: {
+    appName: 'omero',
+    appSelector: 'omero-form'
+  },
   skipValidationOnSave: true,
   editCssClasses: 'row col-md-12',
   viewCssClasses: 'row col-md-offset-1 col-md-10',

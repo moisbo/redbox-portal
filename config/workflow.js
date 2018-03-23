@@ -31,7 +31,7 @@ module.exports.workflow = {
       starting: true
     }
   },
-  "workspace": {
+  "omero": {
     "draft": {
       config: {
         workflow: {
@@ -42,7 +42,23 @@ module.exports.workflow = {
           viewRoles: ['Admin', 'Librarians'],
           editRoles: ['Admin', 'Librarians']
         },
-        form: 'workspace-1.0-draft'
+        form: 'omero-1.0-draft'
+      },
+      starting: true
+    }
+  },
+  "gitlab": {
+    "draft": {
+      config: {
+        workflow: {
+          stage: 'draft',
+          stageLabel: 'Draft',
+        },
+        authorization: {
+          viewRoles: ['Admin', 'Librarians'],
+          editRoles: ['Admin', 'Librarians']
+        },
+        form: 'gitlab-1.0-draft'
       },
       starting: true
     }

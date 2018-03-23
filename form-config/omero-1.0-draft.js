@@ -2,8 +2,8 @@
 * Gitlab form
 */
 module.exports = {
-  name: 'workspace-1.0-draft',
-  type: 'workspace',
+  name: 'omero-1.0-draft',
+  type: 'omero',
   customAngularApp: {
     appName: 'omero',
     appSelector: 'omero-form'

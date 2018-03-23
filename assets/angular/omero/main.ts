@@ -17,18 +17,9 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import { NgModule }      from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { ReactiveFormsModule, FormsModule} from "@angular/forms";
-import { HttpModule } from '@angular/http';
-import { GitlabFormComponent } from './gitlab-form.component';
-import { SharedModule } from '../shared/shared.module';
-
-@NgModule({
-  imports:      [ BrowserModule, HttpModule, ReactiveFormsModule, SharedModule, FormsModule ],
-  declarations: [ GitlabFormComponent ],
-  providers:    [ ],
-  bootstrap:    [ GitlabFormComponent ],
-  entryComponents: [ ]
-})
-export class GitlabModule { }
+import { platformBrowser }    from '@angular/platform-browser';
+import { OMEROModuleNgFactory } from './omero.module.ngfactory';
+import {enableProdMode} from '@angular/core';
+enableProdMode();
+const aotMode = true;
+platformBrowser().bootstrapModuleFactory(OMEROModuleNgFactory);

@@ -31,18 +31,18 @@ import { TranslationService } from '../shared/translation-service';
 declare var jQuery: any;
 
 /**
- * Main Gitlab Edit component
+ * Main OMERO Edit component
  *
  * @author <a target='_' href='https://github.com/moisbo'>Moises Sacal</a>
  *
  */
 @Component({
   moduleId: module.id,
-  selector: 'gitlab-form',
-  templateUrl: './gitlab-form.html',
+  selector: 'omero-form',
+  templateUrl: './omero-form.html',
   providers: [Location, {provide: LocationStrategy, useClass: PathLocationStrategy}]
 })
-export class GitlabFormComponent extends LoadableComponent {
+export class OMEROFormComponent extends LoadableComponent {
   /**
    * The OID for this Form.
    *

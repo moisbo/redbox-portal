@@ -21,14 +21,14 @@ import { NgModule }      from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule, FormsModule} from "@angular/forms";
 import { HttpModule } from '@angular/http';
-import { GitlabFormComponent } from './gitlab-form.component';
+import { OMEROFormComponent } from './omero-form.component';
 import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   imports:      [ BrowserModule, HttpModule, ReactiveFormsModule, SharedModule, FormsModule ],
-  declarations: [ GitlabFormComponent ],
+  declarations: [ OMEROFormComponent ],
   providers:    [ ],
-  bootstrap:    [ GitlabFormComponent ],
+  bootstrap:    [ OMEROFormComponent ],
   entryComponents: [ ]
 })
-export class GitlabModule { }
+export class OMEROModule { }

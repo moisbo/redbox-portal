@@ -19,17 +19,8 @@ module.exports = {
       compClass: 'TextBlockComponent',
       viewOnly: false,
       definition: {
-        value: 'GitLab',
-        type: 'h2'
-      }
-    },
-    {
-      class: 'Container',
-      compClass: 'TextBlockComponent',
-      viewOnly: false,
-      definition: {
         value: 'Workspaces',
-        type: 'h3'
+        type: 'h2'
       }
     }
   ]

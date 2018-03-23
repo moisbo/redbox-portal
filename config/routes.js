@@ -47,13 +47,6 @@ module.exports.routes = {
       'view': 'researcher/home'
     }
   },
-  '/:branding/:portal/record/view/:oid': {
-    controller: 'typescript/RenderViewController',
-    action: 'render',
-    locals:{
-      'view': 'record/view'
-    }
-  },
   '/:branding/:portal/record/transfer/:type': {
     controller: 'typescript/RenderViewController',
     action: 'render',
@@ -130,6 +123,7 @@ module.exports.routes = {
   'post /:branding/:portal/admin/roles/user': 'typescript/AdminController.updateUserRoles',
   'get /:branding/:portal/record/:recordType/edit': 'typescript/RecordController.edit',
   'get /:branding/:portal/record/edit/:oid': 'typescript/RecordController.edit',
+  'get /:branding/:portal/record/view/:oid': 'typescript/RecordController.view',
   'get /:branding/:portal/record/metadata/:oid': 'typescript/RecordController.getMeta',
   'get /:branding/:portal/record/form/:name': 'typescript/RecordController.getForm',
   'get /:branding/:portal/record/form/:name/:oid': 'typescript/RecordController.getForm',

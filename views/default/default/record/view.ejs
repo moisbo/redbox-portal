@@ -7,32 +7,11 @@
   <div class="col-xs-1">
   </div>
 </div>
-  <%
-  var template = '';
-  var oid = req.param('oid');
-  var type = req.param('type') || '';
-  if(type !== '') {
-    template = '<' + type + '-form oid="' + oid + '" editMode="false"></' + type + '-form>';
-  } else {
-    template = '<dmp-form oid="' + oid + '" editMode="false" ></dmp-form>';
-  }
-  %>
-  <%- template %>
-<% if (!sails.config.ng2.use_bundled) {
+<<%= appSelector %> oid="<%= req.param('oid') %>" editMode="false" ></<%= appSelector %>>
+<% if (!sails.config.ng2.use_bundled) { %>
 <!-- Import and Load angular 2 if on dev mode-->
-  var config = "/dynamic/systemjs-config.js?appName=dmp";
-  var type = req.param('type') || '';
-  if(type != '') {
-    config = '/dynamic/systemjs-config.js?appName=' + type;
-  }
-  %>
-<script src="<%= config %>"></script>
+<script src="/dynamic/systemjs-config.js?appName=<%= appName %>"></script>
 <script>
-  var type = "<%= type %>"
-  if(type != ''){
-    System.import(type).catch(function(err){ console.error(err); });
-  } else {
-    System.import("dmp").catch(function(err){ console.error(err); });
-  }
+  System.import('<%= appName %>').catch(function(err){ console.error(err); });
 </script>
 <% } %>

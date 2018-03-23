@@ -71,6 +71,7 @@ export module Services {
                     name: formName,
                     fields: sails.config.form.forms[formName].fields,
                     workflowStep: workflowStep.name,
+                    customAngularApp: sails.config.form.forms[formName].customAngularApp || null,
                     type: sails.config.form.forms[formName].type,
                     messages: sails.config.form.forms[formName].messages,
                     viewCssClasses: sails.config.form.forms[formName].viewCssClasses,

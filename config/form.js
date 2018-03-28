@@ -4,7 +4,7 @@
  var dataRecordForm = require('../form-config/dataRecord-1.0-draft.js');
  var rdmpForm = require('../form-config/default-1.0-draft.js');
  var omeroWorkspaceForm = require('../form-config/omero-1.0-draft.js');
- var omeroWorkspaceForm = require('../form-config/gitlab-1.0-draft.js');
+ var gitlabWorkspaceForm = require('../form-config/gitlab-1.0-draft.js');
 module.exports.form = {
   defaultForm: "default-1.0-draft",
   forms: {

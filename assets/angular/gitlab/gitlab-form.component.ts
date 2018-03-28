@@ -19,8 +19,9 @@
 
 import { Component, Inject, Input, ElementRef } from '@angular/core';
 import { Location, LocationStrategy, PathLocationStrategy } from '@angular/common';
-import {FormGroup, FormControl, Validators, NgForm} from '@angular/forms';
+import { FormGroup, FormControl, Validators, NgForm } from '@angular/forms';
 import { RecordsService } from '../shared/form/records.service';
+import { GitlabService } from './gitlab.service';
 import { LoadableComponent } from '../shared/loadable.component';
 import { FieldControlService } from '../shared/form/field-control.service';
 import { Observable } from 'rxjs/Observable';
@@ -31,11 +32,11 @@ import { TranslationService } from '../shared/translation-service';
 declare var jQuery: any;
 
 /**
- * Main Gitlab Edit component
- *
- * @author <a target='_' href='https://github.com/moisbo'>Moises Sacal</a>
- *
- */
+* Main Gitlab Edit component
+*
+* @author <a target='_' href='https://github.com/moisbo'>Moises Sacal</a>
+*
+*/
 @Component({
   moduleId: module.id,
   selector: 'gitlab-form',
@@ -44,133 +45,174 @@ declare var jQuery: any;
 })
 export class GitlabFormComponent extends LoadableComponent {
   /**
-   * The OID for this Form.
-   *
-   */
+  * The OID for this Form.
+  *
+  */
   @Input() oid: string;
   /**
-   * Edit mode
-   *
-   */
+  * Edit mode
+  *
+  */
   @Input() editMode: boolean;
   /**
-   * The Record type
-   *
-   */
+  * The Record type
+  *
+  */
   @Input() recordType: string;
   /**
-   * Fields for the form
-   */
+  * Fields for the form
+  */
   fields: any[] = [];
   /**
-   * Form group
-   */
+  * Form group
+  */
   form: FormGroup;
   /**
-   * Initialization subscription
-   */
+  * Initialization subscription
+  */
   initSubs: any;
   /**
-   * Field map
-   */
+  * Field map
+  */
   fieldMap: any;
   /**
-   * Form JSON string
-   */
+  * Form JSON string
+  */
   payLoad: any;
   /**
-   * Form status
-   */
+  * Form status
+  */
   status: any;
   /**
-   * Critical error message
-   */
+  * Critical error message
+  */
   criticalError: any;
   /**
-   * Form definition
-   */
+  * Form definition
+  */
   formDef: any;
   /**
-   * CSS classes for this form
-   */
+  * CSS classes for this form
+  */
   cssClasses: any;
   /**
-   * Flag when form needs saving.
-   *
-   */
+  * Flag when form needs saving.
+  *
+  */
   needsSave: boolean;
   /**
-   * Links to tabs
-   */
+  * Links to tabs
+  */
   failedValidationLinks: any[];
   /**
-   * Expects a number of DI'ed elements.
-   */
+  * Expects a number of DI'ed elements.
+  */
 
-   myComponents: any[] = [
-     //{'LoginField': {'meta': LoginField, 'comp': LoginComponent}}
-   ];
+  myComponents: any[] = [
+    //{'LoginField': {'meta': LoginField, 'comp': LoginComponent}}
+  ];
+
+  login: any;
+  loading: boolean = false;
+  workspaces: any[] = [];
+  loginMessageForm: LoginMessageForm;
+  notLoggedIn: any;
+  checks: Checks;
+  creation: Creation;
+  currentWorkspace: CurrentWorkspace;
+  columns: any[] = [
+    {'label': 'Name', 'property': 'name'},
+    {'label': 'Description', 'property': 'description'},
+    {'label': 'Location', 'property': 'web_url'}
+  ];
 
   constructor(
     elm: ElementRef,
     @Inject(RecordsService) protected RecordsService: RecordsService,
     @Inject(FieldControlService) protected fcs: FieldControlService,
     @Inject(Location) protected LocationService: Location,
+    @Inject(GitlabService) protected GitlabService: GitlabService,
     protected translationService: TranslationService
   ) {
     super();
-    this.status = {};
-    this.initSubs = RecordsService.waitForInit((initStat:boolean) => {
+    this.checks = new Checks();
+    this.creation = new Creation();
+    this.currentWorkspace = new CurrentWorkspace();
+    this.initSubs = GitlabService.waitForInit((initStat:boolean) => {
       this.initSubs.unsubscribe();
-      translationService.isReady(tService => {
-        this.fieldMap = {_rootComp:this};
-        this.oid = elm.nativeElement.getAttribute('oid');
-        this.oid = this.oid == 'undefined' ? null : this.oid;
-        this.editMode = elm.nativeElement.getAttribute('editMode') == "true";
-        this.recordType = elm.nativeElement.getAttribute('recordType');
-        console.log(`Loading form with OID: ${this.oid}, on edit mode:${this.editMode}, Record Type: ${this.recordType}`);
-        this.RecordsService.getForm(this.oid, this.recordType, this.editMode).then((obs:any) => {
-          obs.subscribe((form:any) => {
-            debugger;
-            this.formDef = form;
-            if (this.editMode) {
-              this.cssClasses = this.formDef.editCssClasses;
-            } else {
-              this.cssClasses = this.formDef.viewCssClasses;
-            }
-            this.needsSave = false;
-            if (form.fieldsMeta) {
-              this.fields = form.fieldsMeta;
-              this.myComponents.forEach(f => {
-                fcs.addComponentClasses(f.class);
-              });
-              this.rebuildForm();
-              this.watchForChanges();
-            }
-          });
-        }).catch((err:any) => {
-          console.log("Error loading form...");
-          console.log(err);
-          if (err.status == false) {
-              this.criticalError = err.message;
-          }
-          this.setLoading(false);
-        });
-      });
+      this.userInfo();
     });
   }
 
   onLogin(value: any) {
-    console.log(value);
+    this.login = value;
+    //TODO: Do validations
+    jQuery('#gitlabPermissionModal').modal('show');
   }
+
+  allow() {
+    jQuery('#gitlabPermissionModal').modal('hide');
+    this.GitlabService
+    .token(this.login)
+    .then((user: any) => {
+      this.login = {};
+      if(user){
+        this.userInfo();
+      } else {
+        this.loginMessage('Cannot login', 'danger');
+      }
+    })
+    .catch(e => {
+      this.login = {};
+      console.log(e);
+    });
+  }
+
+  userInfo() {
+    this.GitlabService
+    .user()
+    .then(response => {
+      if (response && response.status) {
+        this.getWorkspacesRelated();
+      } else {
+        // show login page because it cannot login via workspace apps
+      }
+    })
+    .catch(e => {
+      this.setLoading(false);
+      console.log(e)
+    });
+  }
+
+  getWorkspacesRelated() {
+    this.workspaces = [];
+    this.GitlabService.projectsRelatedRecord()
+    .then(response => {
+      this.workspaces = response;
+      this.setLoading(false);
+      this.notLoggedIn = false;
+    })
+    .catch(e => {
+      this.setLoading(false);
+      console.log(e);
+    });
+  }
+
+  loginMessage(message, cssClass) {
+    this.loginMessageForm.message = message;
+    this.loginMessageForm.class = cssClass;
+  }
+
+
+
   /**
-   * Main submit method.
-   *
-   * @param  {boolean    =             false} nextStep
-   * @param  {string     =             null}  targetStep
-   * @param  {boolean=false} forceValidate
-   * @return {[type]}
-   */
+  * Main submit method.
+  *
+  * @param  {boolean    =             false} nextStep
+  * @param  {string     =             null}  targetStep
+  * @param  {boolean=false} forceValidate
+  * @return {[type]}
+  */
   onSubmit(nextStep:boolean = false, targetStep:string = null, forceValidate:boolean=false) {
     if (!this.isValid(forceValidate)) {
       return Observable.of(false);
@@ -222,12 +264,12 @@ export class GitlabFormComponent extends LoadableComponent {
   }
 
   /**
-   * Sets the form message status.
-   *
-   * @param  {string} stat  Bootstrap contextual status: https://getbootstrap.com/docs/3.3/css/#helper-classes
-   * @param  {string} msg Message
-   * @return {[type]}
-   */
+  * Sets the form message status.
+  *
+  * @param  {string} stat  Bootstrap contextual status: https://getbootstrap.com/docs/3.3/css/#helper-classes
+  * @param  {string} msg Message
+  * @return {[type]}
+  */
   setStatus(stat:string, msg:string) {
     _.forOwn(this.status, (stat:string, key:string) => {
       this.status[key] = null;
@@ -236,40 +278,40 @@ export class GitlabFormComponent extends LoadableComponent {
   }
 
   /**
-   * Clears status
-   *
-   * @param  {string} stat - Clears the status
-   * @return {[type]}
-   */
+  * Clears status
+  *
+  * @param  {string} stat - Clears the status
+  * @return {[type]}
+  */
   clearStatus(stat:string) {
     this.status[stat] = null;
   }
 
   /**
-   * Convenience wrapper to set saving status.
-   *
-   * @param  {string = 'Saving...'} msg
-   * @return {[type]}
-   */
+  * Convenience wrapper to set saving status.
+  *
+  * @param  {string = 'Saving...'} msg
+  * @return {[type]}
+  */
   setSaving(msg:string = 'Saving...') {
     this.clearError();
     this.clearSuccess();
     this.setStatus('saving', msg);
   }
   /**
-   * Convenience wrapper to clear saving status.
-   *
-   * @return {[type]}
-   */
+  * Convenience wrapper to clear saving status.
+  *
+  * @return {[type]}
+  */
   clearSaving() {
     this.clearStatus('saving');
   }
   /**
-   * Set a 'error' message.
-   *
-   * @param  {string} msg
-   * @return {[type]}
-   */
+  * Set a 'error' message.
+  *
+  * @param  {string} msg
+  * @return {[type]}
+  */
   setError(msg: string) {
     this.clearSaving();
     this.needsSave = true;
@@ -277,43 +319,43 @@ export class GitlabFormComponent extends LoadableComponent {
   }
 
   /**
-   * Clear the error message.
-   *
-   * @return {[type]}
-   */
+  * Clear the error message.
+  *
+  * @return {[type]}
+  */
   clearError() {
     this.clearStatus('error');
   }
 
   /**
-   * Set a 'success' message.
-   * @param  {string} msg
-   * @return {[type]}
-   */
+  * Set a 'success' message.
+  * @param  {string} msg
+  * @return {[type]}
+  */
   setSuccess(msg: string) {
     this.clearSaving();
     this.setStatus('success', msg);
   }
   /**
-   * Clear the 'success' message.
-   * @return {[type]}
-   */
+  * Clear the 'success' message.
+  * @return {[type]}
+  */
   clearSuccess() {
     this.clearStatus('success');
   }
   /**
-   * Rebuild the form message.
-   *
-   * @return {[type]}
-   */
+  * Rebuild the form message.
+  *
+  * @return {[type]}
+  */
   rebuildForm() {
     this.form = this.fcs.toFormGroup(this.fields, this.fieldMap);
   }
   /**
-   * Enable form change monitor.
-   *
-   * @return {[type]}
-   */
+  * Enable form change monitor.
+  *
+  * @return {[type]}
+  */
   watchForChanges() {
     this.setLoading(false);
     if (this.editMode) {
@@ -323,10 +365,10 @@ export class GitlabFormComponent extends LoadableComponent {
     }
   }
   /**
-   * Trigger form validation
-   *
-   * @return {[type]}
-   */
+  * Trigger form validation
+  *
+  * @return {[type]}
+  */
   triggerValidation() {
     this.failedValidationLinks = [];
     _.forOwn(this.fieldMap, (fieldEntry:any, fieldName:string) => {
@@ -336,11 +378,11 @@ export class GitlabFormComponent extends LoadableComponent {
     });
   }
   /**
-   * Checks form validity.
-   *
-   * @param  {boolean=false} forceValidate
-   * @return {[type]}
-   */
+  * Checks form validity.
+  *
+  * @param  {boolean=false} forceValidate
+  * @return {[type]}
+  */
   isValid(forceValidate:boolean=false) {
     if (this.formDef.skipValidationOnSave  && (_.isUndefined(forceValidate) || _.isNull(forceValidate) || !forceValidate)) {
       return true;
@@ -357,105 +399,144 @@ export class GitlabFormComponent extends LoadableComponent {
 
   // STEST-22
   generateFailedValidationLinks() {
-    let label = null;
-    _.forOwn(this.form.controls, (ctrl, ctrlName) => {
-      if (ctrl.invalid) {
-        label = this.failedValidationLinks.length > 0 ? `, ${this.fieldMap[ctrlName].field.label}` : this.fieldMap[ctrlName].field.label;
-        this.failedValidationLinks.push({
-          label: label,
-          parentId: this.fieldMap[ctrlName].instance.parentId
-        });
-
-      }
-    });
-  }
-
-  gotoTab(tabId) {
-    jQuery(`[href=#${tabId}]`).tab('show');
-  }
-
-  getMessage(messageKeyArr: any):string {
-    let message: string = '';
-    _.each(messageKeyArr, (msgKey) => {
-      if (_.startsWith(msgKey, '@')) {
-        message = `${message}${this.translationService.t(msgKey)}`;
-      }
-    });
-    return message;
-  }
-  /**
-   * Submit the form towards a target step.
-   *
-   * @param  {string} targetStep
-   * @return {[type]}
-   */
-  stepTo(targetStep: string) {
-    console.log(this.form.value);
-    if (!this.isValid(true)) {
-      return;
-    }
-    this.needsSave = false;
-    if (_.isEmpty(this.oid)) {
-      this.onSubmit(true, targetStep, true);
-    } else {
-      this.setSaving(this.getMessage(this.formDef.messages.saving));
-      const values = this.formatValues(this.form.value);
-      this.payLoad = JSON.stringify(values);
-      console.log(this.payLoad);
-      this.RecordsService.stepTo(this.oid, this.payLoad, targetStep).then((res:any) => {
-        this.clearSaving();
-        console.log("Update Response:");
-        console.log(res);
-        if (res.success) {
-          this.setSuccess(this.getMessage(this.formDef.messages.saveSuccess));
-          this.gotoDashboard();
-        } else {
-          this.setError(`${this.getMessage(this.formDef.messages.saveError)} ${res.message}`);
-        }
-      }).catch((err:any)=>{
-        this.setError(`${this.getMessage(this.formDef.messages.saveError)} ${err}`);
+  let label = null;
+  _.forOwn(this.form.controls, (ctrl, ctrlName) => {
+    if (ctrl.invalid) {
+      label = this.failedValidationLinks.length > 0 ? `, ${this.fieldMap[ctrlName].field.label}` : this.fieldMap[ctrlName].field.label;
+      this.failedValidationLinks.push({
+        label: label,
+        parentId: this.fieldMap[ctrlName].instance.parentId
       });
+
     }
+  });
+}
+
+gotoTab(tabId) {
+  jQuery(`[href=#${tabId}]`).tab('show');
+}
+
+getMessage(messageKeyArr: any):string {
+  let message: string = '';
+  _.each(messageKeyArr, (msgKey) => {
+    if (_.startsWith(msgKey, '@')) {
+      message = `${message}${this.translationService.t(msgKey)}`;
+    }
+  });
+  return message;
+}
+/**
+* Submit the form towards a target step.
+*
+* @param  {string} targetStep
+* @return {[type]}
+*/
+stepTo(targetStep: string) {
+  console.log(this.form.value);
+  if (!this.isValid(true)) {
+    return;
   }
-  /**
-   * Trigger form elements to format their values.
-   *
-   * @param  {any}    data
-   * @return {[type]}
-   */
-  formatValues(data:any) {
-    const formVals = _.cloneDeep(data);
-    _.forOwn(formVals, (val:any, key:string) => {
-      if (_.isFunction(this.fieldMap[key].instance.formatValue)) {
-        const newVal = this.fieldMap[key].instance.formatValue(formVals[key]);
-        formVals[key] = newVal;
+  this.needsSave = false;
+  if (_.isEmpty(this.oid)) {
+    this.onSubmit(true, targetStep, true);
+  } else {
+    this.setSaving(this.getMessage(this.formDef.messages.saving));
+    const values = this.formatValues(this.form.value);
+    this.payLoad = JSON.stringify(values);
+    console.log(this.payLoad);
+    this.RecordsService.stepTo(this.oid, this.payLoad, targetStep).then((res:any) => {
+      this.clearSaving();
+      console.log("Update Response:");
+      console.log(res);
+      if (res.success) {
+        this.setSuccess(this.getMessage(this.formDef.messages.saveSuccess));
+        this.gotoDashboard();
+      } else {
+        this.setError(`${this.getMessage(this.formDef.messages.saveError)} ${res.message}`);
       }
+    }).catch((err:any)=>{
+      this.setError(`${this.getMessage(this.formDef.messages.saveError)} ${err}`);
     });
-    return formVals;
   }
-  /**
-   * Returns the saving status of the form.
-   *
-   * @return {[type]}
-   */
-  isSaving() {
-    return this.status.saving;
-  }
-  /**
-   * Redirect to dashboard.
-   *
-   * @author <a target='_' href='https://github.com/moisbo'>Moises Sacal</a>
-   * @return {[type]}
-   */
-  gotoDashboard() {
-    window.location.href = this.RecordsService.getDashboardUrl();
-  }
-  /**
-   * Form cancellation handler.
-   *
-   * @return {[type]}
-   */
-  onCancel() {
-    this.gotoDashboard();
-  }
+}
+/**
+* Trigger form elements to format their values.
+*
+* @param  {any}    data
+* @return {[type]}
+*/
+formatValues(data:any) {
+  const formVals = _.cloneDeep(data);
+  _.forOwn(formVals, (val:any, key:string) => {
+    if (_.isFunction(this.fieldMap[key].instance.formatValue)) {
+      const newVal = this.fieldMap[key].instance.formatValue(formVals[key]);
+      formVals[key] = newVal;
+    }
+  });
+  return formVals;
+}
+/**
+* Returns the saving status of the form.
+*
+* @return {[type]}
+*/
+isSaving() {
+  return this.status.saving;
+}
+/**
+* Redirect to dashboard.
+*
+* @author <a target='_' href='https://github.com/moisbo'>Moises Sacal</a>
+* @return {[type]}
+*/
+gotoDashboard() {
+  window.location.href = this.RecordsService.getDashboardUrl();
+}
+/**
+* Form cancellation handler.
+*
+* @return {[type]}
+*/
+onCancel() {
+  this.gotoDashboard();
+}
+}
+
+class LoginMessageForm {
+  message: string;
+  class: string;
+}
+
+class Checks {
+  link: any = undefined;
+  rdmp: boolean = false;
+  linkCreated: boolean = false;
+  linkWithOther: boolean = false;
+  master: boolean = false;
+  comparing: boolean = false;
+}
+
+class Group {
+  name: string;
+  id: string;
+}
+
+class Template {
+  pathWithNamespace: string;
+}
+
+class Creation {
+  created: boolean = false;
+  name: string;
+  namespace: string;
+  creationAlert: string = '';
+  blank: boolean = true;
+  template: any;
+  description: string;
+  group: any;
+}
+
+class CurrentWorkspace {
+  path_with_namespace: string = '';
+  web_url: string = ''
 }

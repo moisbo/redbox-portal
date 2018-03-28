@@ -20,7 +20,7 @@
  * http://sailsjs.org/#!/documentation/concepts/Routes/RouteTargetSyntax.html
  */
 
-module.exports.routes = {
+var routes = {
 
   /***************************************************************************
   *                                                                          *
@@ -182,5 +182,10 @@ module.exports.routes = {
   'get /:branding/:portal/api/users/find': 'typescript/webservice/UserManagementController.findUser',
 
   'post /:branding/:portal/api/sendNotification': 'typescript/EmailController.sendNotification'
-
 };
+
+var workspace = require('../workspace-config/workspace.js').workspace;
+if(workspace && workspace.routes) {
+    Object.assign(routes, workspace.routes);
+}
+module.exports.routes = routes;

@@ -26,6 +26,39 @@ module.exports = {
         value: 'Workspaces',
         type: 'h2'
       }
+    },
+    {
+      class: 'Container',
+      showHeader: true,
+      definition: {
+        name: 'perissions',
+        permissionStep1: 'The provisioner requires permission to create a workspace on your behalf',
+        permissionStep2: 'Stash is requesting from GitLab the following permissions:',
+        permissionRevoke: 'The permissions for this service will be removed. You will require to grant permissions to GitLab again.',
+        permissionList: [
+          'Create Repositories',
+          'Write information into your repositories'
+        ],
+        revokeMessage: 'Revoke Login Consent',
+        backToRDMP: 'Back to your Plan',
+        columns: [
+          {'label': 'Name', 'property': 'Name'},
+          {'label': 'Description', 'property': 'Description'},
+          {'label': 'Location', 'property': 'url:project'}
+        ]
+      }
+    },
+    {
+      class: 'Container',
+      showHeader: true,
+      definition: {
+        name: 'projectList',
+        columns: [
+          {'label': 'Name', 'property': 'Name'},
+          {'label': 'Description', 'property': 'Description'},
+          {'label': 'Location', 'property': 'url:project'}
+        ]
+      }
     }
   ]
 }

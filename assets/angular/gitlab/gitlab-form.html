@@ -2,7 +2,7 @@
   <div class="col-xs-1"></div>
   <div class="col-xs-10">
     <h2>GitLab</h2>
-    <div class="row">
+    <div *ngIf="notLoggedIn" class="row">
       <form  #form="ngForm" (ngSubmit)="onLogin(form.value)" novalidate autocomplete="off">
         <h4>The provisioner requires permission to create a workspace on your behalf</h4>
         <div class="form-group">
@@ -16,22 +16,183 @@
         <button class="btn btn-primary" type="submit">Login</button>
       </form>
     </div>
-    <div class="col-xs-1"></div>
-  </div>
-</div>
-<div *ngIf="criticalError" class="row">
-  <div class="col-xs-2"></div>
-  <div class="col-xs-8">
-    <div class="panel panel-danger">
-      <div class="panel-heading">
-        <h3 class="panel-title">Error</h3>
+    <div *ngIf="!notLoggedIn">
+      <h3>Workspaces</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <ng-container *ngFor="let header of columns"><th>{{ header.label }}</th></ng-container>
+            <th>RDMP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of workspaces">
+            <ng-container *ngFor="let column of columns">
+              <td *ngIf="column.show != false">
+                <span *ngIf="column.link != null; else noProcessing "><a href="/{{ branding }}/{{ portal }}/{{ column.link.pattern}}"></a></span>
+                <ng-template #multivalue></ng-template>
+                <ng-template #noProcessing><span >{{ item[column.property] }}</span></ng-template>
+              </td></ng-container>
+              <td>
+                <span *ngIf="item.rdmp.info && item.rdmp.info.rdmp; else isNotLinked ">
+                  <button disabled type="button" class="btn btn-success btn-block" *ngIf="item.rdmp.info.rdmp === rdmp"> Linked </button>
+                  <button disabled type="button" class="btn btn-info btn-block" *ngIf="item.rdmp.info.rdmp != rdmp"> Linked to another RDMP</button>
+                </span>
+                <ng-template #isNotLinked>
+                  <button type="button" class="btn btn-info btn-block" (click)="linkWorkspace(item.id)"> Link </button>
+                </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div>
+          <button type="button" class="btn btn-default" (click)="getWorkspacesRelated()"><i class="fa fa-refresh"></i>&nbsp;Sync</button>
+          <button type="button" class="btn btn-success" (click)="loadCreateWorkspaceModal()"><i class="fa fa-plus-square"></i>&nbsp;Create</button>
+        </div>
+        <div class="row mt-3 form-group">
+          <button type="button" class="btn btn-danger" (click)="revokeModal()">Revoke Login Consent</button>
+        </div>
       </div>
-      <div class="panel-body">
-        <code>
-          {{criticalError}}
-        </code>
+      <div class="col-xs-1"></div>
+    </div>
+  </div>
+  <div *ngIf="criticalError" class="row">
+    <div class="col-xs-2"></div>
+    <div class="col-xs-8">
+      <div class="panel panel-danger">
+        <div class="panel-heading">
+          <h3 class="panel-title">Error</h3>
+        </div>
+        <div class="panel-body">
+          <code>
+            {{criticalError}}
+          </code>
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-2"></div>
+  </div>
+  <div id="gitlabPermissionModal" class="modal fade">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Requesting Permission</h4>
+        </div>
+        <div class="modal-body">
+          <p>Stash is requesting from GitLab the following permissions:</p>
+          <ul>
+            <li>Create Repositories</li>
+            <li>Write information into your repositories</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" (click)="allow()">Allow</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
       </div>
     </div>
   </div>
-  <div class="col-xs-2"></div>
-</div>
+  <div id="gitlabRevokeModal" class="modal fade">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Removing Permissions</h4>
+        </div>
+        <div class="modal-body">
+          <p>{{ permissionRevoke }}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" (click)="revoke()">Revoke</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="gitlabLinkModal" class="modal fade">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Workspace Linking</h4>
+        </div>
+        <div class="modal-body">
+          <h5>Workspace Details</h5>
+          <p>Name: {{ creation.name }} / {{ creation.namespace }}</p>
+          <p>Web Url: {{ currentWorkspace.web_url }}</p>
+          <h5>Processing</h5>
+          <p>Checking your master workspace link ...&nbsp;<span *ngIf="checks.master; then isDone; else isSpinning"></span></p>
+          <p *ngIf="checks.comparing">Checking current links ...&nbsp;<span *ngIf="checks.link; then isDone; else isSpinning"></span></p>
+          <p *ngIf="checks.link == false">No links, Linking to workspace ...&nbsp;<span *ngIf="checks.rdmp; then isDone; else isSpinning"></span></p>
+          <p class="alert alert-success" *ngIf="checks.linkCreated">Your workspace was linked succesfully</p>
+          <p class="alert alert-danger" *ngIf="checks.linkWithOther">Your workspace is linked with another RDMP</p>
+          <ng-template #isDone>
+            <i class="fa fa-check-circle"></i>
+          </ng-template>
+          <ng-template #isSpinning>
+            <i class="fa fa-spinner fa-spin"></i>
+          </ng-template>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="gitlabCreateModal" class="modal fade">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Create Workspace</h4>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="loadingModal" class="row">
+            <img class="center-block" src="/images/loading.svg">
+          </div>
+          <div *ngIf="!loadingModal">
+            <h5>Workspace Details</h5>
+            <form *ngIf="!creation.created" #form="ngForm" (ngSubmit)="checkName()" novalidate autocomplete="off">
+              <div class="form-group">
+                <h4>Select Space</h4>
+                <select class="form-control" [(ngModel)]="creation.group" name="creationNamespace">
+                  <option *ngFor="let g of groups" [ngValue]="g"
+                  [selected]="creation.group === g">{{ g.path }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <h4>Name your workspace</h4>
+                <input required minlength="4" type="text" class="form-control" name="creationName" [(ngModel)]="creation.name">
+              </div>
+              <div class="form-group">
+                <h4>Add a description</h4>
+                <input required minlength="4" type="text" class="form-control" name="description" [(ngModel)]="creation.description">
+              </div>
+            </form>
+            <form *ngIf="!creation.created" #form="ngForm" (ngSubmit)="create()" novalidate autocomplete="off">
+              <div class="form-group">
+                <h4>Select Template</h4>
+                <select class="form-control" [(ngModel)]="creation.template" name="creationTemplate">
+                  <option *ngFor="let t of templates" [ngValue]="t"
+                  [selected]="creation.template === t">{{ t.pathWithNamespace || 'No Template' }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <div *ngIf="creation.message" class="alert alert-{{ creation.creationAlert }}" class="form-group">
+                  <span *ngIf="creation.creationAlert == 'danger' || creation.creationAlert == 'success'; then isDone; else isSpinning"></span>{{ creation.message }}
+                  <ng-template #isDone>
+                    <i class="fa fa-check-circle"></i>
+                  </ng-template>
+                  <ng-template #isSpinning>
+                    <i class="fa fa-spinner fa-spin"></i>
+                  </ng-template>
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit">Create</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </form>
+          </div>
+        </div>
+        <div class="modal-footer">
+          &nbsp;
+        </div>
+      </div>
+    </div>
+  </div>

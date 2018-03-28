@@ -1201,7 +1201,7 @@ module.exports = {
                   viewOnly: true,
                   definition: {
                     label: 'GitLab',
-                    value: '/@branding/@portal/record/workspace/edit?rdmp=@oid&type=gitlab',
+                    value: '/@branding/@portal/record/gitlab/edit?rdmp=@oid',
                     cssClasses: 'btn btn-large btn-info margin-15',
                     showPencil: false,
                     controlType: 'anchor'
@@ -1213,7 +1213,7 @@ module.exports = {
                   viewOnly: true,
                   definition: {
                     label: 'OMERO',
-                    value: '/@branding/@portal/record/workspace/edit?rdmp=@oid&type=omero',
+                    value: '/@branding/@portal/record/omero/edit?rdmp=@oid',
                     cssClasses: 'btn btn-large btn-info margin-15',
                     showPencil: false,
                     controlType: 'anchor'

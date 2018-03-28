@@ -22,12 +22,13 @@ import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule, FormsModule} from "@angular/forms";
 import { HttpModule } from '@angular/http';
 import { GitlabFormComponent } from './gitlab-form.component';
+import { GitlabService } from './gitlab.service';
 import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   imports:      [ BrowserModule, HttpModule, ReactiveFormsModule, SharedModule, FormsModule ],
   declarations: [ GitlabFormComponent ],
-  providers:    [ ],
+  providers:    [ GitlabService ],
   bootstrap:    [ GitlabFormComponent ],
   entryComponents: [ ]
 })

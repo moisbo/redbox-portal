@@ -1,9 +1,9 @@
 /**
- * WorkspaceApp.js
- *
- * @description :: Captures the workspaceApps required for singin purposes
- * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
- */
+* WorkspaceApp.js
+*
+* @description :: Captures the workspaceApps required for singin purposes
+* @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
+*/
 
 module.exports = {
   attributes: {
@@ -21,5 +21,17 @@ module.exports = {
     info: {
       type: 'json'
     }
-  }
+  },
+  indexes: [
+    //app & user composite index
+    {
+      attributes: {
+        app: 1,
+        user: 1
+      },
+      options: {
+        unique: true
+      }
+    }
+  ]
 }

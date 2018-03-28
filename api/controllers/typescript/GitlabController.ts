@@ -166,43 +166,307 @@ export module Controllers {
       }
     }
 
-    workspaceInfoFromRepo(content: string) {
-      const workspaceLink = Buffer.from(content, 'base64').toString('ascii');
-      if(workspaceLink) {
-        const workspaceInfo = workspaceLink.split('.');
-        return {rdmp: _.first(workspaceInfo), workspace: _.last(workspaceInfo)};
-      } else{
-        return {rdmp: null, workspace: null};
-      }
-    }
-
-    parseResponseFromRepo(response) {
-      const result = {content: null, path:''};
-      if(response.body && response.body.content) {
-        result.content = response.body.content;
-        var url_parts = url.parse(response.request.uri.href, true);
-        var query = url_parts.query;
-        result.path = query.namespace;
+    public link(req, res) {
+      sails.log.debug('get link');
+      sails.log.debug('createWorkspaceRecord')
+      if (!req.isAuthenticated()) {
+        this.ajaxFail(req, res, `User not authenticated`);
       } else {
-        result.content = null;
-        result.path = response.path;
+        this.config.brandingAndPortalUrl = sails.getBaseUrl() + BrandingService.getBrandAndPortalPath(req);
+        const project = req.param('project');
+        const rdmpId = req.param('rdmpId');
+
+        let workspaceId = null;
+        let gitlab = {};
+
+        return GitlabService.provisionerUser(this.config.provisionerUser)
+        .flatMap(response => {
+          this.config.redboxHeaders['Authorization'] = 'Bearer ' + response.token;
+          const userId = req.user.id;
+          return GitlabService.userInfo(userId)
+        })
+        .flatMap(user => {
+          gitlab = user.accessToken.gitlab;
+          const username = req.user.username;
+          return GitlabService.createWorkspaceRecord(this.config, username, project, 'draft');
+        }).flatMap(response => {
+          workspaceId = response.oid;
+          sails.log.debug('addWorkspaceInfo');
+          return GitlabService.addWorkspaceInfo(this.config, gitlab.accessToken.access_token, project, rdmpId + '.' + workspaceId, 'stash.workspace');
+        })
+        .flatMap(response => {
+          sails.log.debug('addParentRecordLink');
+          return GitlabService.getRecordMeta(this.config, rdmpId);
+        })
+        .flatMap(recordMetadata => {
+          sails.log.debug('recordMetadata');
+          if(recordMetadata && recordMetadata.workspaces) {
+            const wss = recordMetadata.workspaces.find(id => workspaceId === id);
+            if(!wss) {
+              recordMetadata.workspaces.push({id: workspaceId});
+            }
+          }
+          return GitlabService.updateRecordMeta(this.config, recordMetadata, rdmpId);
+        })
+        .subscribe(response => {
+          this.ajaxOk(req, res, null, response);
+        }, error => {
+          sails.log.error(error);
+          const errorMessage = `Failed to link workspace with ID: ${project.id}` ;
+          sails.log.error(errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
+        });
       }
-      return result;
     }
 
+    public checkRepo(req, res) {
+      sails.log.debug('check link');
+      if (!req.isAuthenticated()) {
+        this.ajaxFail(req, res, `User not authenticated`);
+      } else {
+        const projectNameSpace = req.param('projectNameSpace');
+        let gitlab = {};
+        const userId = req.user.id;
+        return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
+        .flatMap(response => {
+          const gitlab = response.info;
+          return GitlabService.readFileFromRepo(this.config, gitlab.accessToken.access_token, projectNameSpace, 'stash.workspace');
+        }).subscribe(response => {
+          sails.log.debug('checkLink:getRecordMeta');
+          const parsedResponse = this.parseResponseFromRepo(response);
+          const wI = parsedResponse.content ? this.workspaceInfoFromRepo(parsedResponse.content) : {rdmp: null, workspace: null};
+          sails.log.debug(wI);
+          this.ajaxOk(req, res, null, wI);
+        }, error => {
+          sails.log.error(error);
+          const errorMessage = `Failed check link workspace project: ${projectNameSpace}`;
+          sails.log.error(errorMessage);
+          this.ajaxFail(req, res, errorMessage, error);
+        });
+      }
+    }
 
+    public compareLink(req, res) {
+      const rdmpId = req.param('rdmpId');
+      const projectNameSpace = req.param('projectNameSpace');
+      const workspaceId = req.param('workspaceId');
+
+      this.config.brandingAndPortalUrl = sails.getBaseUrl() + BrandingService.getBrandAndPortalPath(req);
+
+      return GitlabService.provisionerUser(this.config.provisionerUser)
+      .flatMap(response => {
+        this.config.redboxHeaders['Authorization'] = 'Bearer ' + response.token;
+        return GitlabService.getRecordMeta(this.config, rdmpId);
+      })
+      .subscribe(recordMetadata => {
+        sails.log.debug('recordMetadata');
+        if(recordMetadata && recordMetadata.workspaces) {
+          const wss = recordMetadata.workspaces.find(id => workspaceId === id);
+          let message = 'workspace match';
+          if(!wss) {
+            message = 'workspace not found';
+          }
+          this.ajaxOk(req, res, null, {workspace: wss, message: message});
+        } else{
+          const errorMessage = `Failed compare link workspace project: ${projectNameSpace}` ;
+          this.ajaxFail(req, res, null, errorMessage);
+        }
+      }, error => {
+        const errorMessage = `Failed compare link workspace project: ${projectNameSpace}`;
+        sails.log.error(errorMessage);
+        this.ajaxFail(req, res, errorMessage, error);
+      });
+    }
+
+    public create(req, res) {
+      const creation = req.param('creation');
+
+      let workspaceId = '';
+      const group = creation.group;
+      const namespace = group.path + '/' + creation.name;
+      if (!req.isAuthenticated()) {
+        this.ajaxFail(req, res, `User not authenticated`);
+      } else {
+        const userId = req.user.id;
+        return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
+        .flatMap(response => {
+          const gitlab = response.info;
+          return GitlabService.create(this.config, gitlab.accessToken.access_token, creation);
+        }).subscribe(response => {
+          sails.log.debug('updateRecordMeta');
+          this.ajaxOk(req, res, null, response);
+        }, error => {
+          sails.log.error(error);
+          const errorMessage = `Failed to create workspace with: ${namespace}` ;
+          sails.log.error(errorMessage);
+          const data = {status: false, message: {description: errorMessage, error: error}}
+          this.ajaxFail(req, res, null, data);
+        });
+      }
+    }
+
+    public createWithTemplate(req, res) {
+      //Needs to fork project
+      if (!req.isAuthenticated()) {
+      this.ajaxFail(req, res, `User not authenticated`);
+    } else {
+      const creation = req.param('creation');
+      const userId = req.user.id;
+      return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
+      .flatMap(response => {
+        const gitlab = response.info;
+        return GitlabService.fork(this.config, gitlab.accessToken.access_token, creation);
+      }).subscribe(response => {
+        sails.log.debug('fork');
+        this.ajaxOk(req, res, null, response);
+      }, error => {
+        sails.log.error(error);
+        const errorMessage = `Failed to fork project with Id: ${creation.template.id}`;
+        sails.log.error(errorMessage);
+        const data = {status: false, message: {description: errorMessage, error: error}}
+        this.ajaxFail(req, res, null, data);
+      });
+    }
   }
 
-  class Config {
-    host: string;
-    recordType: string;
-    formName: string;
-    appName: string;
-    parentRecord: string;
-    provisionerUser: string;
-    brandingAndPortalUrl: string;
-    redboxHeaders: any;
+  public updateProject(req, res) {
+    //TODO: In this case only name can be updated for FORK, should it have more?
+    //Remove fork relationship?
+    //change name
+    if (!req.isAuthenticated()) {
+    this.ajaxFail(req, res, `User not authenticated`);
+  } else {
+    const creation = req.param('creation');
+    //TODO: make some validations on each case of the update
+    const project = {};
+    const projectId = creation.group.path + '/' + creation.template.name; //Can also be the id
+    project['name'] = creation.template.name;
+    project['group'] = creation.group;
+    project['attributes'] = [{name: 'name', newValue: creation.name}, {name: 'path', newValue: creation.name}];
+    const userId = req.user.id;
+    return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
+    .flatMap(response => {
+      const gitlab = response.info;
+      return GitlabService.updateProject(this.config, gitlab.accessToken.access_token, projectId, project);
+    }).subscribe(response => {
+      sails.log.debug('updateProject');
+      this.ajaxOk(req, res, null, response);
+    }, error => {
+      sails.log.error(error);
+      const errorMessage = `Failed to update project with: ${creation}`;
+      sails.log.error(errorMessage);
+      const data = {status: false, message: {description: errorMessage, error: error}}
+      this.ajaxFail(req, res, null, data);
+    });
   }
+}
+
+public project(req, res) {
+  const pathWithNamespace = req.param('pathWithNamespace');
+
+  if (!req.isAuthenticated()) {
+    this.ajaxFail(req, res, `User not authenticated`);
+  } else {
+    const userId = req.user.id;
+    return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
+    .flatMap(response => {
+      const gitlab = response.info;
+      return GitlabService.project(this.config, gitlab.accessToken.access_token, pathWithNamespace);
+    })
+    .subscribe(response => {
+      sails.log.debug('project');
+      this.ajaxOk(req, res, null, response);
+    }, error => {
+      sails.log.error(error);
+      const errorMessage = `Failed to check project with: ${pathWithNamespace}` ;
+      sails.log.error(errorMessage);
+      this.ajaxFail(req, res, errorMessage, error);
+    });
+  }
+}
+
+public templates(req, res) {
+  if (!req.isAuthenticated()) {
+    this.ajaxFail(req, res, `User not authenticated`);
+  } else {
+    const userId = req.user.id;
+    return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
+    .flatMap(response => {
+      const gitlab = response.info;
+      return GitlabService.templates(this.config, gitlab.accessToken.access_token, 'provisioner_template');
+    }).subscribe(response => {
+      let simple = [];
+      if(response.value){
+        simple = response.value.map(p => {return {id: p.id, pathWithNamespace: p.path_with_namespace, name: p.path, namespace: p.namespace.path}});
+      }
+      this.ajaxOk(req, res, null, simple);
+    }, error => {
+      sails.log.error(error);
+      const errorMessage = `Failed to check templates`;
+      sails.log.error(errorMessage);
+      this.ajaxFail(req, res, errorMessage, error);
+    });
+  }
+}
+
+public groups(req, res) {
+  if (!req.isAuthenticated()) {
+    this.ajaxFail(req, res, `User not authenticated`);
+  } else {
+    const userId = req.user.id;
+    return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
+    .flatMap(response => {
+      const gitlab = response.info;
+      return GitlabService.groups(this.config, gitlab.accessToken.access_token)
+    }).subscribe(response => {
+      sails.log.debug('groups');
+      this.ajaxOk(req, res, null, response);
+    }, error => {
+      sails.log.error(error);
+      const errorMessage = `Failed to get groups`;
+      sails.log.error(errorMessage);
+      this.ajaxFail(req, res, errorMessage, error);
+    });
+  }
+}
+
+workspaceInfoFromRepo(content: string) {
+  const workspaceLink = Buffer.from(content, 'base64').toString('ascii');
+  if(workspaceLink) {
+    const workspaceInfo = workspaceLink.split('.');
+    return {rdmp: _.first(workspaceInfo), workspace: _.last(workspaceInfo)};
+  } else{
+    return {rdmp: null, workspace: null};
+  }
+}
+
+parseResponseFromRepo(response) {
+  const result = {content: null, path:''};
+  if(response.body && response.body.content) {
+    result.content = response.body.content;
+    var url_parts = url.parse(response.request.uri.href, true);
+    var query = url_parts.query;
+    result.path = query.namespace;
+  } else {
+    result.content = null;
+    result.path = response.path;
+  }
+  return result;
+}
+
+
+}
+
+class Config {
+  host: string;
+  recordType: string;
+  formName: string;
+  appName: string;
+  parentRecord: string;
+  provisionerUser: string;
+  brandingAndPortalUrl: string;
+  redboxHeaders: any;
+}
 
 }
 

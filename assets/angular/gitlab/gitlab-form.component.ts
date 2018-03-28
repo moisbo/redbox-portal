@@ -152,8 +152,7 @@ export class GitlabFormComponent extends LoadableComponent {
 
   allow() {
     jQuery('#gitlabPermissionModal').modal('hide');
-    this.GitlabService
-    .token(this.login)
+    this.GitlabService.token(this.login)
     .then((user: any) => {
       this.login = {};
       if(user){
@@ -169,16 +168,18 @@ export class GitlabFormComponent extends LoadableComponent {
   }
 
   userInfo() {
-    this.GitlabService
-    .user()
+    this.GitlabService.user()
     .then(response => {
       if (response && response.status) {
         this.getWorkspacesRelated();
       } else {
         // show login page because it cannot login via workspace apps
+        this.notLoggedIn = true;
+        this.setLoading(false);
       }
     })
     .catch(e => {
+      this.notLoggedIn = true;
       this.setLoading(false);
       console.log(e)
     });
@@ -198,11 +199,140 @@ export class GitlabFormComponent extends LoadableComponent {
     });
   }
 
+  create() {
+    if(this.validateWorkspace()){
+      this.creation.message = 'Creating workspace';
+      this.creation.creationAlert = 'info';
+      if(this.creation.template.pathWithNamespace){
+        this.createWithTemplate();
+      }else {
+        this.createWorkspace();
+      }
+    }else {
+      this.creation.message = this.creation.validateMessage;
+      this.creation.creationAlert = 'danger';
+    }
+  }
+
+  validateWorkspace() {
+    if(!this.creation.name) {
+      this.creation.validateMessage = 'Name of the workspace is required';
+      this.creation.creationAlert = 'danger';
+      return false;
+    }
+    if(!this.creation.description) {
+      this.creation.validateMessage = 'Description of the workspace is required';
+      this.creation.creationAlert = 'danger';
+      return false;
+    }
+    this.creation.message = undefined;
+    this.creation.creationAlert = undefined;
+    return true;
+  }
+
   loginMessage(message, cssClass) {
     this.loginMessageForm.message = message;
     this.loginMessageForm.class = cssClass;
   }
 
+  createWorkspace() {
+    this.gitlabService.createWorkspace(this.creation)
+    .then(response => {
+      if(response.status == false){
+        //TODO: improve this assignment in case of error.
+        const name = response.message.error.error.message.name || '';
+        throw new Error('Name ' + _.first(name));
+      } else {
+        return this.checkCreation();
+      }
+    }).then(response => {
+      if(response.status == false){
+        //TODO: improve this assignment in case of error.
+        const name = response.message.error.error.message.name || '';
+        throw new Error(_.first(name));
+      }else {
+        this.creation.message = 'Linking workspace';
+        this.creation.creationAlert = 'warning';
+        this.creation.namespace = this.creation.group.path;
+        return this.createLink(this.creation)
+        .then(response => {
+          if(response.status == false){
+            throw new Error(response.message.description);
+          }
+          this.creation.message = 'Workspace created and linked';
+          this.creation.creationAlert = 'success';
+        });
+      }
+    })
+    .catch(error => {
+      this.creation.creationAlert = 'danger';
+      this.creation.message = error;
+    });
+  }
+
+  createWithTemplate() {
+    this.gitlabService.createWithTemplate(this.creation)
+    .then(response => {
+      return this.gitlabService.updateProject(this.creation);
+    })
+    .then(response => {
+      if(response.status == false){
+        //TODO: improve this assignment in case of error.
+        const name = response.message.error.error.message.name || '';
+        throw new Error(_.first(name));
+      }else {
+        this.creation.message = 'Linking workspace';
+        this.creation.creationAlert = 'warning';
+        this.creation.namespace = this.creation.group.path;
+        return this.createLink(this.creation)
+        .then(response => {
+          if(response.status == false){
+            throw new Error(response.message.description);
+          }
+          this.creation.message = 'Workspace created and linked';
+          this.creation.creationAlert = 'success';
+        });
+      }
+    })
+    .then(response => {
+      console.log(response);
+    })
+    .catch(error => {
+      this.creation.creationAlert = 'danger';
+      this.creation.message = error;
+    });
+  }
+
+  checkCreation() {
+    let pathWithNamespace = '';
+    pathWithNamespace = this.creation.group.path + '/' + this.creation.name;
+    return this.gitlabService.project(pathWithNamespace);
+  }
+
+  checkName(){
+    //TODO: check workspace name if it is available
+  }
+
+  createLink(project: any) {
+    return this.gitlabService.link(this.rdmp, project);
+  }
+
+  revokeModal() {
+    jQuery('#gitlabRevokeModal').modal('show');
+  }
+
+  revoke() {
+    this.gitlabService
+    .revokeToken()
+    .then(response => {
+      this.wsUser.token = null;
+      this.workspaces = [];
+      jQuery('#gitlabRevokeModal').modal('hide');
+    })
+    .catch(error => {
+      console.log(error);
+    });
+  }
 
 
   /**

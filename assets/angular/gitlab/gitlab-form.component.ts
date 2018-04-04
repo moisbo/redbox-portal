@@ -28,6 +28,11 @@ import { Observable } from 'rxjs/Observable';
 import * as _ from "lodash-lib";
 import { TranslationService } from '../shared/translation-service';
 
+import { ListWorkspaceDataField, ListWorkspaceDataComponent } from '../shared/form/ws/list-workspaces.component';
+import { LoginWorkspaceAppField, LoginWorkspaceAppComponent } from '../shared/form/ws/login-workspaceapp.component';
+import { CreateWorkspaceField, CreateWorkspaceComponent } from '../shared/form/ws/create-workspace.component';
+import { RevokeLoginWorkspaceAppField, RevokeLoginWorkspaceAppComponent } from '../shared/form/ws/revokelogin-workspaceapp.component';
+import { LoginModalWorkspaceField, LoginModalWorkspaceComponent } from '../shared/form/ws/loginmodal-workspaceapp.component';
 // STEST-22
 declare var jQuery: any;
 
@@ -125,6 +130,10 @@ export class GitlabFormComponent extends LoadableComponent {
     {'label': 'Description', 'property': 'description'},
     {'label': 'Location', 'property': 'web_url'}
   ];
+  rdmp: string;
+  groups: Group[];
+  templates: Template[];
+  wsUser: WsUser;
 
   constructor(
     elm: ElementRef,
@@ -137,21 +146,65 @@ export class GitlabFormComponent extends LoadableComponent {
     super();
     this.checks = new Checks();
     this.creation = new Creation();
+    this.wsUser = new WsUser();
     this.currentWorkspace = new CurrentWorkspace();
+    this.oid = elm.nativeElement.getAttribute('oid');
+    this.editMode = elm.nativeElement.getAttribute('editMode') == "true";
+    this.recordType = elm.nativeElement.getAttribute('recordType');
+
+    //TODO: Find out what is this next line!
+    this.fieldMap = {_rootComp: this};
+
     this.initSubs = GitlabService.waitForInit((initStat:boolean) => {
       this.initSubs.unsubscribe();
-      this.userInfo();
+      this.rdmp = elm.nativeElement.getAttribute('rdmp');
+      //this.userInfo();
+      this.loadForm();
+    });
+  }
+
+  loadForm() {
+    this.fcs.addComponentClasses({
+      'ListWorkspaceDataField': { 'meta': ListWorkspaceDataField, 'comp': ListWorkspaceDataComponent },
+      'LoginWorkspaceAppField': { 'meta': LoginWorkspaceAppField, 'comp': LoginWorkspaceAppComponent },
+      'CreateWorkspaceField': { 'meta': CreateWorkspaceField, 'comp': CreateWorkspaceComponent },
+      'RevokeLoginWorkspaceAppField': { 'meta': RevokeLoginWorkspaceAppField, 'comp': RevokeLoginWorkspaceAppComponent },
+      'LoginModalWorkspaceField': { 'meta': LoginModalWorkspaceField, 'comp': LoginModalWorkspaceComponent }
+    });
+
+    this.RecordsService.getForm(this.oid, this.recordType, this.editMode).then((obs:any) => {
+      obs.subscribe((form:any) => {
+        this.formDef = form;
+        if (this.editMode) {
+          this.cssClasses = this.formDef.editCssClasses;
+        } else {
+          this.cssClasses = this.formDef.viewCssClasses;
+        }
+        this.needsSave = false;
+        if (form.fieldsMeta) {
+          this.fields = form.fieldsMeta;
+          this.rebuildForm();
+          this.watchForChanges();
+        }
+      });
+    }).catch((err:any) => {
+      console.log("Error loading form...");
+      console.log(err);
+      if (err.status == false) {
+        this.criticalError = err.message;
+      }
+      this.setLoading(false);
     });
   }
 
   onLogin(value: any) {
     this.login = value;
     //TODO: Do validations
-    jQuery('#gitlabPermissionModal').modal('show');
+    jQuery('#loginPermissionModal').modal('show');
   }
 
   allow() {
-    jQuery('#gitlabPermissionModal').modal('hide');
+    jQuery('#loginPermissionModal').modal('hide');
     this.GitlabService.token(this.login)
     .then((user: any) => {
       this.login = {};
@@ -171,6 +224,7 @@ export class GitlabFormComponent extends LoadableComponent {
     this.GitlabService.user()
     .then(response => {
       if (response && response.status) {
+        this.wsUser = response.user;
         this.getWorkspacesRelated();
       } else {
         // show login page because it cannot login via workspace apps
@@ -196,6 +250,31 @@ export class GitlabFormComponent extends LoadableComponent {
     .catch(e => {
       this.setLoading(false);
       console.log(e);
+    });
+  }
+
+  loadCreateWorkspaceModal() {
+    //To populate dropdown with first space and template
+    this.loadingModal = true;
+    this.creation.name = '';
+    this.creation.description = '';
+    jQuery('#gitlabCreateModal').modal('show');
+    let group = new Group();
+    group.id = this.wsUser.id; group.path = this.wsUser.username; group.isUser = true;
+    this.groups = [group];
+    this.creation.group = this.groups[0];
+    this.templates = [{pathWithNamespace: undefined}];
+    this.creation.template = this.templates[0];
+    this.GitlabService.groups()
+    .then(response => {
+      this.groups = this.groups.concat(response);
+      return this.GitlabService.templates();
+    }).then(response => {
+      this.templates = this.templates.concat(response);
+      this.loadingModal = false;
+    })
+    .catch(error => {
+      this.creation.message = error;
     });
   }
 
@@ -236,7 +315,7 @@ export class GitlabFormComponent extends LoadableComponent {
   }
 
   createWorkspace() {
-    this.gitlabService.createWorkspace(this.creation)
+    this.GitlabService.createWorkspace(this.creation)
     .then(response => {
       if(response.status == false){
         //TODO: improve this assignment in case of error.
@@ -271,9 +350,9 @@ export class GitlabFormComponent extends LoadableComponent {
   }
 
   createWithTemplate() {
-    this.gitlabService.createWithTemplate(this.creation)
+    this.GitlabService.createWithTemplate(this.creation)
     .then(response => {
-      return this.gitlabService.updateProject(this.creation);
+      return this.GitlabService.updateProject(this.creation);
     })
     .then(response => {
       if(response.status == false){
@@ -306,7 +385,7 @@ export class GitlabFormComponent extends LoadableComponent {
   checkCreation() {
     let pathWithNamespace = '';
     pathWithNamespace = this.creation.group.path + '/' + this.creation.name;
-    return this.gitlabService.project(pathWithNamespace);
+    return this.GitlabService.project(pathWithNamespace);
   }
 
   checkName(){
@@ -314,7 +393,7 @@ export class GitlabFormComponent extends LoadableComponent {
   }
 
   createLink(project: any) {
-    return this.gitlabService.link(this.rdmp, project);
+    return this.GitlabService.link(this.rdmp, project);
   }
 
   revokeModal() {
@@ -322,10 +401,9 @@ export class GitlabFormComponent extends LoadableComponent {
   }
 
   revoke() {
-    this.gitlabService
-    .revokeToken()
+    this.GitlabService.revokeToken()
     .then(response => {
-      this.wsUser.token = null;
+      this.notLoggedIn = true;
       this.workspaces = [];
       jQuery('#gitlabRevokeModal').modal('hide');
     })
@@ -649,6 +727,8 @@ class Checks {
 class Group {
   name: string;
   id: string;
+  path: string;
+  isUser: boolean;
 }
 
 class Template {
@@ -664,9 +744,16 @@ class Creation {
   template: any;
   description: string;
   group: any;
+  message: string;
+  validateMessage: string;
 }
 
 class CurrentWorkspace {
   path_with_namespace: string = '';
   web_url: string = ''
+}
+
+class WsUser {
+  username: string;
+  id: string;
 }

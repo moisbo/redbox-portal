@@ -65,7 +65,6 @@ export module Services {
             if (formName) {
 
               _.each(workflowSteps, function(workflowStep) {
-
                 if (workflowStep.config.form == formName) {
                   const formObj = {
                     name: formName,
@@ -78,7 +77,7 @@ export module Services {
                     editCssClasses: sails.config.form.forms[formName].editCssClasses,
                     skipValidationOnSave: sails.config.form.forms[formName].skipValidationOnSave
                   };
-
+                  sails.log.verbose("Processing Form: " + formName);
                   var q = Form.create(formObj);
                   var obs = Observable.bindCallback(q["exec"].bind(q))();
                   obs.subscribe(result => {

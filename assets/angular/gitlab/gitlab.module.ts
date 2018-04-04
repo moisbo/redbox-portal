@@ -24,12 +24,19 @@ import { HttpModule } from '@angular/http';
 import { GitlabFormComponent } from './gitlab-form.component';
 import { GitlabService } from './gitlab.service';
 import { SharedModule } from '../shared/shared.module';
+import { WSFieldComponent } from '../shared/form/ws/ws-field.component';
+import { ListWorkspaceDataComponent } from '../shared/form/ws/list-workspaces.component';
+import { LoginWorkspaceAppComponent } from '../shared/form/ws/login-workspaceapp.component';
+import { CreateWorkspaceComponent } from '../shared/form/ws/create-workspace.component';
+import { RevokeLoginWorkspaceAppComponent } from '../shared/form/ws/revokelogin-workspaceapp.component';
+import { LoginModalWorkspaceComponent } from '../shared/form/ws/loginmodal-workspaceapp.component';
 
 @NgModule({
   imports:      [ BrowserModule, HttpModule, ReactiveFormsModule, SharedModule, FormsModule ],
-  declarations: [ GitlabFormComponent ],
+  exports:      [ WSFieldComponent ],
+  declarations: [ GitlabFormComponent, WSFieldComponent, ListWorkspaceDataComponent, LoginWorkspaceAppComponent, CreateWorkspaceComponent, RevokeLoginWorkspaceAppComponent, LoginModalWorkspaceComponent ],
   providers:    [ GitlabService ],
   bootstrap:    [ GitlabFormComponent ],
-  entryComponents: [ ]
+  entryComponents: [ WSFieldComponent, ListWorkspaceDataComponent, LoginWorkspaceAppComponent, CreateWorkspaceComponent, RevokeLoginWorkspaceAppComponent, LoginModalWorkspaceComponent ]
 })
 export class GitlabModule { }

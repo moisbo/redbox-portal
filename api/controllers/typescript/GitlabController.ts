@@ -24,7 +24,16 @@ export module Controllers {
     protected _exportedMethods: any = [
       'token',
       'user',
-      'projectsRelatedRecord'
+      'projectsRelatedRecord',
+      'groups',
+      'templates',
+      'link',
+      'checkRepo',
+      'revokeToken',
+      'create',
+      'createWithTemplate',
+      'project',
+      'updateProject'
     ]
     protected config: Config;
 
@@ -35,7 +44,7 @@ export module Controllers {
       const workspaceConfig = sails.config.local.workspaces;
       this.config = {
         host: gitlabConfig.host,
-        recordType: gitlabConfig.recordType,
+        recordType: workspaceConfig.recordType,
         formName: gitlabConfig.formName,
         appName: gitlabConfig.appName,
         parentRecord: workspaceConfig.parentRecord,
@@ -113,7 +122,7 @@ export module Controllers {
           return GitlabService.user(this.config, gitlab.accessToken.access_token)
         }).subscribe(response => {
           response.status = true;
-          this.ajaxOk(req, res, null, {status: true});
+          this.ajaxOk(req, res, null, {status: true, user: gitlab.user});
         }, error => {
           sails.log.error(error);
           const errorMessage = `Failed to get user workspace info of userId: ${userId}`;
@@ -179,16 +188,15 @@ export module Controllers {
         let workspaceId = null;
         let gitlab = {};
 
-        return GitlabService.provisionerUser(this.config.provisionerUser)
+        return WorkspaceService.provisionerUser(this.config.provisionerUser)
         .flatMap(response => {
           this.config.redboxHeaders['Authorization'] = 'Bearer ' + response.token;
           const userId = req.user.id;
-          return GitlabService.userInfo(userId)
-        })
-        .flatMap(user => {
-          gitlab = user.accessToken.gitlab;
+          return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName);
+        }).flatMap(response => {
+          gitlab = response.info;
           const username = req.user.username;
-          return GitlabService.createWorkspaceRecord(this.config, username, project, 'draft');
+          return WorkspaceService.createWorkspaceRecord(this.config, username, project, 'draft');
         }).flatMap(response => {
           workspaceId = response.oid;
           sails.log.debug('addWorkspaceInfo');
@@ -253,7 +261,7 @@ export module Controllers {
 
       this.config.brandingAndPortalUrl = sails.getBaseUrl() + BrandingService.getBrandAndPortalPath(req);
 
-      return GitlabService.provisionerUser(this.config.provisionerUser)
+      return WorkspaceService.provisionerUser(this.config.provisionerUser)
       .flatMap(response => {
         this.config.redboxHeaders['Authorization'] = 'Bearer ' + response.token;
         return GitlabService.getRecordMeta(this.config, rdmpId);

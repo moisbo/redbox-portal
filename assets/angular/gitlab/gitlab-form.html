@@ -1,61 +1,7 @@
 <div *ngIf="!criticalError" class="row">
   <div class="col-xs-1"></div>
   <div class="col-xs-10">
-    <h2>GitLab</h2>
-    <div *ngIf="notLoggedIn">
-      <form  #form="ngForm" (ngSubmit)="onLogin(form.value)" novalidate autocomplete="off">
-        <h4>The provisioner requires permission to create a workspace on your behalf</h4>
-        <div class="form-group">
-          <label>Username</label>
-          <input type="text" class="form-control" name="username" ngModel>
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" class="form-control" name="password" ngModel>
-        </div>
-        <button class="btn btn-primary" type="submit">Login</button>
-      </form>
-    </div>
-    <div *ngIf="!notLoggedIn">
-      <h3>Workspaces</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <ng-container *ngFor="let header of columns"><th>{{ header.label }}</th></ng-container>
-            <th>RDMP</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of workspaces">
-            <ng-container *ngFor="let column of columns">
-              <td *ngIf="column.show != false">
-                <span *ngIf="column.link != null; else noProcessing "><a href="/{{ branding }}/{{ portal }}/{{ column.link.pattern}}"></a></span>
-                <ng-template #multivalue></ng-template>
-                <ng-template #noProcessing><span >{{ item[column.property] }}</span></ng-template>
-              </td></ng-container>
-              <td>
-                <span *ngIf="item.rdmp.info && item.rdmp.info.rdmp; else isNotLinked ">
-                  <button disabled type="button" class="btn btn-success btn-block" *ngIf="item.rdmp.info.rdmp === rdmp"> Linked </button>
-                  <button disabled type="button" class="btn btn-info btn-block" *ngIf="item.rdmp.info.rdmp != rdmp"> Linked to another RDMP</button>
-                </span>
-                <ng-template #isNotLinked>
-                  <button type="button" class="btn btn-info btn-block" (click)="linkWorkspace(item.id)"> Link </button>
-                </ng-template>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="">
-          <button type="button" class="btn btn-default" (click)="getWorkspacesRelated()"><i class="fa fa-refresh"></i>&nbsp;Sync</button>
-          <button type="button" class="btn btn-success" (click)="loadCreateWorkspaceModal()"><i class="fa fa-plus-square"></i>&nbsp;Create</button>
-        </div>
-        <br/>
-        <div class="mt-3 form-group">
-          <button type="button" class="btn btn-danger" (click)="revokeModal()">Revoke Login Consent</button>
-        </div>
-      </div>
-      <div class="col-xs-1"></div>
-    </div>
+    <ws-field *ngFor="let field of fields" [field]="field" [form]="form" class="form-row" [fieldMap]="fieldMap"></ws-field>
   </div>
   <div *ngIf="criticalError" class="row">
     <div class="col-xs-2"></div>
@@ -72,26 +18,6 @@
       </div>
     </div>
     <div class="col-xs-2"></div>
-  </div>
-  <div id="gitlabPermissionModal" class="modal fade">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Requesting Permission</h4>
-        </div>
-        <div class="modal-body">
-          <p>Stash is requesting from GitLab the following permissions:</p>
-          <ul>
-            <li>Create Repositories</li>
-            <li>Write information into your repositories</li>
-          </ul>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" (click)="allow()">Allow</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
   </div>
   <div id="gitlabRevokeModal" class="modal fade">
     <div class="modal-dialog" role="document">

@@ -23,40 +23,71 @@ module.exports = {
       compClass: 'TextBlockComponent',
       viewOnly: false,
       definition: {
-        value: 'Workspaces',
+        name: 'title',
+        value: 'GitLab',
         type: 'h2'
       }
     },
     {
       class: 'Container',
-      showHeader: true,
+      compClass: 'TextBlockComponent',
+      viewOnly: false,
       definition: {
-        name: 'perissions',
-        permissionStep1: 'The provisioner requires permission to create a workspace on your behalf',
-        permissionStep2: 'Stash is requesting from GitLab the following permissions:',
-        permissionRevoke: 'The permissions for this service will be removed. You will require to grant permissions to GitLab again.',
-        permissionList: [
-          'Create Repositories',
-          'Write information into your repositories'
-        ],
-        revokeMessage: 'Revoke Login Consent',
-        backToRDMP: 'Back to your Plan',
-        columns: [
-          {'label': 'Name', 'property': 'Name'},
-          {'label': 'Description', 'property': 'Description'},
-          {'label': 'Location', 'property': 'url:project'}
-        ]
+        name: 'subtitle',
+        value: 'Workspaces',
+        type: 'h3'
       }
     },
     {
-      class: 'Container',
+      class: 'ListWorkspaceDataField',
       showHeader: true,
       definition: {
-        name: 'projectList',
+        name: 'ListWorkspaces',
         columns: [
           {'label': 'Name', 'property': 'Name'},
           {'label': 'Description', 'property': 'Description'},
-          {'label': 'Location', 'property': 'url:project'}
+          {'label': 'Location', 'property': 'web_url'}
+        ],
+        rdmpLinkLabel: 'Plan',
+        syncLabel: 'Sync'
+      }
+    },
+    {
+      class: 'CreateWorkspaceField',
+      showHeader: true,
+      definition: {
+        name: 'CreateWorkspace',
+        createLabel: 'Create'
+      }
+    },
+    {
+      class: 'LoginWorkspaceAppField',
+      showHeader: true,
+      definition: {
+        name: 'LoginWorkspaceApp',
+        permissionStep: 'The provisioner requires permission to create a workspace on your behalf',
+        usernameLabel: 'username',
+        passwordLabel: 'password',
+        loginLabel: 'Login'
+      }
+    },
+    {
+      class: 'RevokeLoginWorkspaceAppField',
+      showHeader: true,
+      definition: {
+        name: 'RevokeLogin',
+        revokeLabel: 'Revoke Login Consent'
+      }
+    },
+    {
+      class: 'LoginModalWorkspaceField',
+      showHeader: true,
+      definition: {
+        name: 'modalLogin',
+        permissionStep: 'Stash is requesting from Omero the following permissions:',
+        permissionList: [
+          'Create Repositories',
+          'Write information into your repositories'
         ]
       }
     }

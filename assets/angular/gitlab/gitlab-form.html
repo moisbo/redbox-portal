@@ -1,125 +1,24 @@
 <div *ngIf="!criticalError" class="row">
   <div class="col-xs-1"></div>
   <div class="col-xs-10">
-    <ws-field *ngFor="let field of fields" [field]="field" [form]="form" class="form-row" [fieldMap]="fieldMap"></ws-field>
+    <ws-field *ngFor="let field of fields" [field]="field"
+      [form]="form" class="form-row" [fieldMap]="fieldMap">
+    </ws-field>
   </div>
-  <div *ngIf="criticalError" class="row">
-    <div class="col-xs-2"></div>
-    <div class="col-xs-8">
-      <div class="panel panel-danger">
-        <div class="panel-heading">
-          <h3 class="panel-title">Error</h3>
-        </div>
-        <div class="panel-body">
-          <code>
-            {{criticalError}}
-          </code>
-        </div>
+</div>
+<div *ngIf="criticalError" class="row">
+  <div class="col-xs-2"></div>
+  <div class="col-xs-8">
+    <div class="panel panel-danger">
+      <div class="panel-heading">
+        <h3 class="panel-title">Error</h3>
       </div>
-    </div>
-    <div class="col-xs-2"></div>
-  </div>
-  <div id="gitlabRevokeModal" class="modal fade">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Removing Permissions</h4>
-        </div>
-        <div class="modal-body">
-          <p>{{ permissionRevoke }}</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" (click)="revoke()">Revoke</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        </div>
+      <div class="panel-body">
+        <code>
+          {{criticalError}}
+        </code>
       </div>
     </div>
   </div>
-  <div id="gitlabLinkModal" class="modal fade">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Workspace Linking</h4>
-        </div>
-        <div class="modal-body">
-          <h5>Workspace Details</h5>
-          <p>Name: {{ creation.name }} / {{ creation.namespace }}</p>
-          <p>Web Url: {{ currentWorkspace.web_url }}</p>
-          <h5>Processing</h5>
-          <p>Checking your master workspace link ...&nbsp;<span *ngIf="checks.master; then isDone; else isSpinning"></span></p>
-          <p *ngIf="checks.comparing">Checking current links ...&nbsp;<span *ngIf="checks.link; then isDone; else isSpinning"></span></p>
-          <p *ngIf="checks.link == false">No links, Linking to workspace ...&nbsp;<span *ngIf="checks.rdmp; then isDone; else isSpinning"></span></p>
-          <p class="alert alert-success" *ngIf="checks.linkCreated">Your workspace was linked succesfully</p>
-          <p class="alert alert-danger" *ngIf="checks.linkWithOther">Your workspace is linked with another RDMP</p>
-          <ng-template #isDone>
-            <i class="fa fa-check-circle"></i>
-          </ng-template>
-          <ng-template #isSpinning>
-            <i class="fa fa-spinner fa-spin"></i>
-          </ng-template>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="gitlabCreateModal" class="modal fade">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Create Workspace</h4>
-        </div>
-        <div class="modal-body">
-          <div *ngIf="loadingModal" class="row">
-            <img class="center-block" src="/images/loading.svg">
-          </div>
-          <div *ngIf="!loadingModal">
-            <h5>Workspace Details</h5>
-            <form *ngIf="!creation.created" #form="ngForm" (ngSubmit)="checkName()" novalidate autocomplete="off">
-              <div class="form-group">
-                <h4>Select Space</h4>
-                <select class="form-control" [(ngModel)]="creation.group" name="creationNamespace">
-                  <option *ngFor="let g of groups" [ngValue]="g"
-                  [selected]="creation.group === g">{{ g.path }}</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <h4>Name your workspace</h4>
-                <input required minlength="4" type="text" class="form-control" name="creationName" [(ngModel)]="creation.name">
-              </div>
-              <div class="form-group">
-                <h4>Add a description</h4>
-                <input required minlength="4" type="text" class="form-control" name="description" [(ngModel)]="creation.description">
-              </div>
-            </form>
-            <form *ngIf="!creation.created" #form="ngForm" (ngSubmit)="create()" novalidate autocomplete="off">
-              <div class="form-group">
-                <h4>Select Template</h4>
-                <select class="form-control" [(ngModel)]="creation.template" name="creationTemplate">
-                  <option *ngFor="let t of templates" [ngValue]="t"
-                  [selected]="creation.template === t">{{ t.pathWithNamespace || 'No Template' }}</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <div *ngIf="creation.message" class="alert alert-{{ creation.creationAlert }}" class="form-group">
-                  <span *ngIf="creation.creationAlert == 'danger' || creation.creationAlert == 'success'; then isDone; else isSpinning"></span>{{ creation.message }}
-                  <ng-template #isDone>
-                    <i class="fa fa-check-circle"></i>
-                  </ng-template>
-                  <ng-template #isSpinning>
-                    <i class="fa fa-spinner fa-spin"></i>
-                  </ng-template>
-                </div>
-              </div>
-              <button class="btn btn-primary" type="submit">Create</button>
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            </form>
-          </div>
-        </div>
-        <div class="modal-footer">
-          &nbsp;
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="col-xs-2"></div>
+</div>

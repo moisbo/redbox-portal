@@ -7,7 +7,7 @@
   <div class="col-xs-1">
   </div>
 </div>
-<<%= appSelector %> oid="<%= req.param('oid') %>" editMode="false" ></<%= appSelector %>>
+<<%= appSelector %> oid="<%= req.param('oid') %>" rdmp="<%= rdmp %>" editMode="false" ></<%= appSelector %>>
 <% if (!sails.config.ng2.use_bundled) { %>
 <!-- Import and Load angular 2 if on dev mode-->
 <script src="/dynamic/systemjs-config.js?appName=<%= appName %>"></script>

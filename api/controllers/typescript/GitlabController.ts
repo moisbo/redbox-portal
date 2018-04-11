@@ -77,7 +77,7 @@ export module Controllers {
           sails.log.debug('infoFormUserId');
           sails.log.debug(response);
           user = response;
-          return GitlabService.token(this.config, username, password)
+          return GitlabService.token(this.config, username, password);
         })
         .flatMap(response => {
           sails.log.debug('token');

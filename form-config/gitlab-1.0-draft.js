@@ -12,10 +12,10 @@ module.exports = {
   editCssClasses: 'row col-md-12',
   viewCssClasses: 'row col-md-offset-1 col-md-10',
   messages: {
-    "saving": ["@dmpt-form-saving"],
-    "validationFail": ["@dmpt-form-validation-fail-prefix", "@dmpt-form-validation-fail-suffix"],
-    "saveSuccess": ["@dmpt-form-save-success"],
-    "saveError": ["@dmpt-form-save-error"]
+    'saving': ['@dmpt-form-saving'],
+    'validationFail': ['@dmpt-form-validation-fail-prefix', '@dmpt-form-validation-fail-suffix'],
+    'saveSuccess': ['@dmpt-form-save-success'],
+    'saveError': ['@dmpt-form-save-error']
   },
   fields: [
     {
@@ -49,7 +49,14 @@ module.exports = {
           {'label': 'Location', 'property': 'web_url'}
         ],
         rdmpLinkLabel: 'Plan',
-        syncLabel: 'Sync'
+        syncLabel: 'Sync',
+        // subscribe: {
+        //   'LoginWorkspaceApp': {
+        //     listWorkspaces: [{
+        //       action: 'listWorkspaces'
+        //     }]
+        //   }
+        // },
       }
     },
     {
@@ -57,7 +64,14 @@ module.exports = {
       showHeader: true,
       definition: {
         name: 'CreateWorkspace',
-        createLabel: 'Create'
+        createLabel: 'Create',
+        cancelLabel: 'Cancel',
+        createWorkspaceLabel: 'Create Workspace',
+        workspaceDetailsLabel: 'Workspace Details',
+        selectSpace: 'Select Space',
+        nameWorkspace: 'Name your workspace',
+        addDescriprion: 'Add a description',
+        selectTemplate: 'Select Template'
       }
     },
     {
@@ -68,7 +82,15 @@ module.exports = {
         permissionStep: 'The provisioner requires permission to create a workspace on your behalf',
         usernameLabel: 'username',
         passwordLabel: 'password',
-        loginLabel: 'Login'
+        loginLabel: 'Login',
+        permissionStep: 'Stash is requesting from Gitlab the following permissions:',
+        permissionList: [
+          'Create Repositories',
+          'Write information into your repositories'
+        ],
+        allowLabel: 'Allow',
+        closeLabel: 'Close',
+        loginErrorMessage: 'Please include username and password'
       }
     },
     {
@@ -76,19 +98,12 @@ module.exports = {
       showHeader: true,
       definition: {
         name: 'RevokeLogin',
-        revokeLabel: 'Revoke Login Consent'
-      }
-    },
-    {
-      class: 'LoginModalWorkspaceField',
-      showHeader: true,
-      definition: {
-        name: 'modalLogin',
-        permissionStep: 'Stash is requesting from Omero the following permissions:',
-        permissionList: [
-          'Create Repositories',
-          'Write information into your repositories'
-        ]
+        revokeLabel: 'Revoke Login Consent',
+        name: 'RevokeModal',
+        permissionRevokeTitle: 'Remove permissions:',
+        permissionRevoke: 'Stash will delete your permissions',
+        allowLabel: 'Revoke',
+        closeLabel: 'Close'
       }
     }
   ]

@@ -1,26 +1,10 @@
-// Copyright (c) 2017 Queensland Cyber Infrastructure Foundation (http://www.qcif.edu.au/)
-//
-// GNU GENERAL PUBLIC LICENSE
-//    Version 2, June 1991
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, write to the Free Software Foundation, Inc.,
-// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import { Input, Component, OnInit, Inject, Injector} from '@angular/core';
-import { SimpleComponent } from '../field-simple.component';
-import { FieldBase } from '../field-base';
+import { SimpleComponent } from '../../shared/form/field-simple.component';
+import { FieldBase } from '../../shared/form/field-base';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import * as _ from "lodash-lib";
+
+import { GitlabService } from '../gitlab.service';
 
 /**
  * Contributor Model
@@ -41,9 +25,13 @@ export class ListWorkspaceDataField extends FieldBase<any> {
   columns: object[];
   rdmpLinkLabel: string;
   syncLabel: string;
+  workspaces: any[];
+  user: any;
+  gitlabService: GitlabService;
 
   constructor(options: any, injector: any) {
     super(options, injector);
+    this.gitlabService = this.getFromInjector(GitlabService);
     this.relatedObjects = [];
     this.accessDeniedObjects = [];
     this.failedObjects = [];
@@ -59,6 +47,13 @@ export class ListWorkspaceDataField extends FieldBase<any> {
     this.accessDeniedObjects = [];
 
   }
+
+  registerEvents() {
+    this.fieldMap['LoginWorkspaceApp'].field['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));
+    //let that = this;
+    //this.fieldMap._rootComp['loginMessage'].subscribe(that.displayLoginMessage);
+  }
+
 
   createFormModel(valueElem: any = undefined): any {
     if (valueElem) {
@@ -83,27 +78,53 @@ export class ListWorkspaceDataField extends FieldBase<any> {
     this.value = [];
     return this.value;
   }
+
+  listWorkspaces(user: any) {
+    //TODO: How to handle metadata here
+    this.gitlabService.user()
+    .then(response => {
+      if (response && response.status) {
+        this.user = response.user;
+        this.getWorkspacesRelated();
+      } else {
+        // show login page because it cannot login via workspace apps
+        // this.notLoggedIn = true;
+        // this.setLoading(false);
+      }
+    });
+  }
+
+  getWorkspacesRelated() {
+    this.workspaces = [];
+    this.gitlabService.projectsRelatedRecord()
+    .then(response => {
+      this.workspaces = response;
+      //this.setLoading(false);
+      //this.notLoggedIn = false;
+    });
+  }
+
 }
 
 declare var aotMode
 // Setting the template url to a constant rather than directly in the component as the latter breaks document generation
-let wsListWorkspaceDataTemplate = './field-listWorkspaceData.html';
+let wsListWorkspaceDataTemplate = './field-listworkspaces.html';
 if(typeof aotMode == 'undefined') {
-  wsListWorkspaceDataTemplate = '../angular/shared/form/ws/field-listWorkspaceData.html';
+  wsListWorkspaceDataTemplate = '../angular/gitlab/components/field-listworkspaces.html';
 }
 
 /**
 * Component to display information from related objects within ReDBox
-*
-*
-*
-*
 */
 @Component({
-  selector: 'ws-listworkspacedata',
+  selector: 'ws-listworkspaces',
   templateUrl: wsListWorkspaceDataTemplate
 })
 export class ListWorkspaceDataComponent extends SimpleComponent {
   field: ListWorkspaceDataField;
+
+  ngOnInit() {
+    this.field.registerEvents();
+  }
 
 }

@@ -1,0 +1,64 @@
+<div class='padding-bottom-10'>
+  <div class="row">
+    <button type="button" class="btn btn-success" (click)="field.loadCreateWorkspaceModal()"><i class="fa fa-plus-square"></i>&nbsp;{{ field.createLabel }}</button>
+  </div>
+</div>
+<div id="createModal" class="modal fade">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">{{ field.createWorkspaceLabel }}</h4>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="loadingModal" class="row">
+          <img class="center-block" src="/images/loading.svg">
+        </div>
+        <div *ngIf="!loadingModal">
+          <h5>{{ field.workspaceDetailsLabel }}</h5>
+          <form *ngIf="!field.creation.created" #form="ngForm" (ngSubmit)="checkName()" novalidate autocomplete="off">
+            <div class="form-group">
+              <h4>{{ field.selectSpace }}</h4>
+              <select class="form-control" [(ngModel)]="field.creation.group" name="creationNamespace">
+                <option *ngFor="let g of groups" [ngValue]="g"
+                [selected]="field.creation.group === g">{{ g.path }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <h4>{{ field.nameWorkspace }}</h4>
+              <input required minlength="4" type="text" class="form-control" name="creationName" [(ngModel)]="field.creation.name">
+            </div>
+            <div class="form-group">
+              <h4>{{ field.addDescriprion }}</h4>
+              <input required minlength="4" type="text" class="form-control" name="description" [(ngModel)]="field.creation.description">
+            </div>
+          </form>
+          <form *ngIf="!field.creation.created" #form="ngForm" (ngSubmit)="field.create()" novalidate autocomplete="off">
+            <div class="form-group">
+              <h4>{{ field.selectTemplate }}</h4>
+              <select class="form-control" [(ngModel)]="field.creation.template" name="creationTemplate">
+                <option *ngFor="let t of field.templates" [ngValue]="t"
+                [selected]="field.creation.template === t">{{ t.pathWithNamespace || 'No Template' }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <div *ngIf="field.creation.message" class="alert alert-{{ field.creation.creationAlert }}" class="form-group">
+                <span *ngIf="field.creation.creationAlert == 'danger' || field.creation.creationAlert == 'success'; then isDone; else isSpinning"></span>{{ creation.message }}
+                <ng-template #isDone>
+                  <i class="fa fa-check-circle"></i>
+                </ng-template>
+                <ng-template #isSpinning>
+                  <i class="fa fa-spinner fa-spin"></i>
+                </ng-template>
+              </div>
+            </div>
+            <button class="btn btn-primary" type="submit">{{ field.createLabel }}</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ field.cancelLabel }}</button>
+          </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        &nbsp;
+      </div>
+    </div>
+  </div>
+</div>

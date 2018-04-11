@@ -83,6 +83,7 @@ export module Controllers {
       const brand = BrandingService.getBrand(req.session.branding);
       const oid = req.param('oid') ? req.param('oid') : '';
       const recordType = req.param('recordType') ? req.param('recordType') : '';
+      const rdmp = req.query.rdmp ? req.query.rdmp : '';
       let appSelector = 'dmp-form';
       let appName = 'dmp';
       if(recordType != '') {
@@ -91,7 +92,7 @@ export module Controllers {
             appSelector = form['customAngularApp']['appSelector'];
             appName = form['customAngularApp']['appName'];
           }
-            return this.sendView(req, res, 'record/edit', { oid: oid, recordType: recordType, appSelector: appSelector, appName: appName });
+            return this.sendView(req, res, 'record/edit', { oid: oid, rdmp: rdmp, recordType: recordType, appSelector: appSelector, appName: appName });
         });
       } else {
         RecordsService.getMeta(oid).flatMap(record => {
@@ -102,7 +103,7 @@ export module Controllers {
             appSelector = form['customAngularApp']['appSelector'];
             appName = form['customAngularApp']['appName'];
           }
-          return this.sendView(req, res, 'record/edit', { oid: oid, recordType: recordType, appSelector: appSelector, appName: appName });
+          return this.sendView(req, res, 'record/edit', { oid: oid, rdmp: rdmp, recordType: recordType, appSelector: appSelector, appName: appName });
         });
 
       }
@@ -111,6 +112,7 @@ export module Controllers {
     public view(req, res) {
       const brand = BrandingService.getBrand(req.session.branding);
       const oid = req.param('oid') ? req.param('oid') : '';
+      const rdmp = req.query.rdmp ? req.query.rdmp : '';
       let appSelector = 'dmp-form';
       let appName = 'dmp';
         RecordsService.getMeta(oid).flatMap(record => {
@@ -121,7 +123,7 @@ export module Controllers {
             appSelector = form['customAngularApp']['appSelector'];
             appName = form['customAngularApp']['appName'];
           }
-          return this.sendView(req, res, 'record/view', { oid: oid,  appSelector: appSelector, appName: appName });
+          return this.sendView(req, res, 'record/view', { oid: oid, rdmp: rdmp, appSelector: appSelector, appName: appName });
         });
 
 

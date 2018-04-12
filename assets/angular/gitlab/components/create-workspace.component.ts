@@ -1,11 +1,11 @@
-import { Input, Component, OnInit, Inject, Injector, ElementRef, ViewChild } from '@angular/core';
+import { Input, Output, Component, OnInit, Inject, Injector, ElementRef, ViewChild, EventEmitter } from '@angular/core';
 import { SimpleComponent } from '../../shared/form/field-simple.component';
 import { FieldBase } from '../../shared/form/field-base';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import * as _ from "lodash-lib";
 
 import { GitlabService } from '../gitlab.service';
-import { Creation, Template, Checks, CurrentWorkspace, Group, WsUser } from './shared';
+import { Creation, CreationAlert, Template, Checks, CurrentWorkspace, Group, WsUser } from './shared';
 
 // STEST-22
 declare var jQuery: any;
@@ -19,6 +19,7 @@ declare var jQuery: any;
 export class CreateWorkspaceField extends FieldBase<any> {
 
   showHeader: boolean;
+  loggedIn: boolean;
   validators: any;
   enabledValidators: boolean;
   hasInit: boolean;
@@ -28,11 +29,15 @@ export class CreateWorkspaceField extends FieldBase<any> {
   workspaceDetailsLabel: string;
   selectSpace: string;
   nameWorkspace: string;
-  addDescriprion: string;
+  addDescription: string;
   selectTemplate: string;
+
+  loadingModal: boolean;
 
   checks: Checks;
   creation: Creation;
+  creationAlert: CreationAlert;
+  processing: boolean = false;
   currentWorkspace: CurrentWorkspace;
   wsUser: WsUser;
   groups: Group[];
@@ -45,21 +50,29 @@ export class CreateWorkspaceField extends FieldBase<any> {
     super(options, injector);
     this.gitlabService = this.getFromInjector(GitlabService);
     this.checks = new Checks();
-    this.creation = new Creation();
     this.currentWorkspace = new CurrentWorkspace();
     this.wsUser = new WsUser();
+    this.creation = new Creation();
     this.createLabel = options['createLabel'] || '';
     this.cancelLabel = options['cancelLabel'] || '';
     this.createWorkspaceLabel = options['createWorkspaceLabel'] || '';
     this.workspaceDetailsLabel = options['workspaceDetailsLabel'] || '';
     this.selectSpace = options['selectSpace'] || '';
     this.nameWorkspace = options['nameWorkspace'] || '';
-    this.addDescriprion = options['addDescriprion'] || '';
+    this.addDescription = options['addDescription'] || '';
     this.selectTemplate = options['selectTemplate'] || '';
   }
 
-  registerEvents() {
+  init() {
     this.rdmp = this.fieldMap._rootComp.rdmp;
+  }
+  
+  registerEvents() {
+    this.fieldMap['ListWorkspaces'].field['checkLoggedIn'].subscribe(this.checkLogin.bind(this));
+  }
+
+  checkLogin(status){
+    this.loggedIn = status;
   }
 
   createFormModel(valueElem: any = undefined): any {
@@ -88,57 +101,57 @@ export class CreateWorkspaceField extends FieldBase<any> {
 
   loadCreateWorkspaceModal() {
     //To populate dropdown with first space and template
-    //this.loadingModal = true;
-    this.creation.name = '';
-    this.creation.description = '';
-    jQuery('#createModal').modal('show');
+    this.loadingModal = true;
+    this.creation.clear();
     let group = new Group();
     group.id = this.wsUser.id; group.path = this.wsUser.username; group.isUser = true;
     this.groups = [group];
     this.creation.group = this.groups[0];
     this.templates = [{pathWithNamespace: undefined}];
     this.creation.template = this.templates[0];
+    jQuery('#createModal').modal({show: true, keyboard: false});
     this.gitlabService.groups()
     .then(response => {
       this.groups = this.groups.concat(response);
       return this.gitlabService.templates();
     }).then(response => {
       this.templates = this.templates.concat(response);
-      //this.loadingModal = false;
+      this.loadingModal = false;
     })
     .catch(error => {
-      this.creation.message = error;
+      this.loadingModal = false;
+      this.creationAlert.message = error;
     });
   }
 
   create() {
     if(this.validateWorkspace()){
-      this.creation.message = 'Creating workspace';
-      this.creation.creationAlert = 'info';
+      this.creationAlert.message = 'Creating workspace';
+      this.creationAlert.creationAlert = 'info';
       if(this.creation.template.pathWithNamespace){
         this.createWithTemplate();
       }else {
         this.createWorkspace();
       }
     }else {
-      this.creation.message = this.creation.validateMessage;
-      this.creation.creationAlert = 'danger';
+      this.creationAlert.message = this.creation.validateMessage;
+      this.creationAlert.class = 'danger';
     }
   }
 
   validateWorkspace() {
     if(!this.creation.name) {
       this.creation.validateMessage = 'Name of the workspace is required';
-      this.creation.creationAlert = 'danger';
+      this.creationAlert.class = 'danger';
       return false;
     }
     if(!this.creation.description) {
       this.creation.validateMessage = 'Description of the workspace is required';
-      this.creation.creationAlert = 'danger';
+      this.creationAlert.class = 'danger';
       return false;
     }
-    this.creation.message = undefined;
-    this.creation.creationAlert = undefined;
+    this.creationAlert.message = undefined;
+    this.creationAlert.class = undefined;
     return true;
   }
 
@@ -158,22 +171,22 @@ export class CreateWorkspaceField extends FieldBase<any> {
         const name = response.message.error.error.message.name || '';
         throw new Error(_.first(name));
       }else {
-        this.creation.message = 'Linking workspace';
-        this.creation.creationAlert = 'warning';
+        this.creationAlert.message = 'Linking workspace';
+        this.creationAlert.class = 'warning';
         this.creation.namespace = this.creation.group.path;
         return this.createLink(this.creation)
         .then(response => {
           if(response.status == false){
             throw new Error(response.message.description);
           }
-          this.creation.message = 'Workspace created and linked';
-          this.creation.creationAlert = 'success';
+          this.creationAlert.message = 'Workspace created and linked';
+          this.creationAlert.class = 'success';
         });
       }
     })
     .catch(error => {
-      this.creation.creationAlert = 'danger';
-      this.creation.message = error;
+      this.creationAlert.class = 'danger';
+      this.creationAlert.message = error;
     });
   }
 
@@ -188,16 +201,16 @@ export class CreateWorkspaceField extends FieldBase<any> {
         const name = response.message.error.error.message.name || '';
         throw new Error(_.first(name));
       }else {
-        this.creation.message = 'Linking workspace';
-        this.creation.creationAlert = 'warning';
+        this.creationAlert.message = 'Linking workspace';
+        this.creationAlert.class = 'warning';
         this.creation.namespace = this.creation.group.path;
         return this.createLink(this.creation)
         .then(response => {
           if(response.status == false){
             throw new Error(response.message.description);
           }
-          this.creation.message = 'Workspace created and linked';
-          this.creation.creationAlert = 'success';
+          this.creationAlert.message = 'Workspace created and linked';
+          this.creationAlert.class = 'success';
         });
       }
     })
@@ -205,8 +218,8 @@ export class CreateWorkspaceField extends FieldBase<any> {
       console.log(response);
     })
     .catch(error => {
-      this.creation.creationAlert = 'danger';
-      this.creation.message = error;
+      this.creationAlert.class = 'danger';
+      this.creationAlert.message = error;
     });
   }
 
@@ -216,7 +229,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
     return this.gitlabService.project(pathWithNamespace);
   }
 
-  checkName(){
+  checkName() {
     //TODO: check workspace name if it is available
   }
 
@@ -246,6 +259,7 @@ export class CreateWorkspaceComponent extends SimpleComponent {
   field: CreateWorkspaceField;
 
   ngOnInit() {
+    this.field.init();
     this.field.registerEvents();
   }
 }

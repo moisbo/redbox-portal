@@ -1,4 +1,4 @@
-<div class='padding-bottom-10'>
+<div *ngIf="field.loggedIn" class="padding-bottom-10">
   <div class="row">
     <table class="table">
       <thead>
@@ -28,10 +28,13 @@
         </tr>
       </tbody>
     </table>
+    <div *ngIf="field.loading" class="row">
+      <img class="center-block" src="/images/loading.svg">
+    </div>
     <p *ngIf="field.failedObjects.length > 0">There were {{ field.failedObjects.length }} records that failed to load</p>
     <p *ngIf="field.accessDeniedObjects.length > 0">There were {{ field.accessDeniedObjects.length }} records that you do not have access to</p>
   </div>
   <div class="row">
-    <button type="button" class="btn btn-default" (click)="field.getWorkspacesRelated()"><i class="fa fa-refresh"></i>&nbsp;{{ field.syncLabel }}</button>
+    <button type="button" class="btn btn-default" (click)="field.listWorkspaces()"><i class="fa fa-refresh"></i>&nbsp;{{ field.syncLabel }}</button>
   </div>
 </div>

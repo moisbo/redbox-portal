@@ -26,15 +26,24 @@ export class Template {
 
 export class Creation {
   created: boolean = false;
-  name: string;
+  name: string = '';
   namespace: string;
-  creationAlert: string = '';
   blank: boolean = true;
   template: any;
-  description: string;
+  description: string = '';
   group: any;
-  message: string;
   validateMessage: string;
+
+  clear() {
+    this.description = '';
+    this.name = '';
+  }
+}
+
+export class CreationAlert {
+  message: string;
+  creationAlert: string = '';
+  class: string;
 }
 
 export class CurrentWorkspace {

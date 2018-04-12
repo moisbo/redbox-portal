@@ -106,6 +106,29 @@ export module Controllers {
       }
     }
 
+    public revokeToken(req, res) {
+      const userId = req.user.id;
+      WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
+      .flatMap(response => {
+        sails.log.debug('workspaceAppFromUserId');
+        if(response.id && response.user){
+          return WorkspaceService.removeAppFromUserId(response.user, response.id);
+        } else {
+          //TODO: return maybe observable throw?
+          return Observable.of('');
+        }
+      }).subscribe(response => {
+        sails.log.debug('revokeToken');
+        sails.log.debug(response);
+        this.ajaxOk(req, res, null, {status: true});
+      }, error => {
+        sails.log.error(error);
+        const errorMessage = `Failed to revokeToken for user: ${userId}`;
+        sails.log.error(errorMessage);
+        this.ajaxFail(req, res, errorMessage, error);
+      });
+    }
+
     public user(req, res) {
       sails.log.debug('get user:');
       let gitlab = {};

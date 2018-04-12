@@ -24,7 +24,8 @@ export module Services {
       'cookieJar',
       'infoFormUserId',
       'createWorkspaceInfo',
-      'workspaceAppFromUserId'
+      'workspaceAppFromUserId',
+      'removeAppFromUserId'
     ];
 
     config: any;
@@ -145,6 +146,12 @@ export module Services {
     workspaceAppFromUserId(userId, appName){
       return this.getObservable(
         WorkspaceApp.findOne({app: appName, user: userId})
+      );
+    }
+
+    removeAppFromUserId(userId, id){
+      return this.getObservable(
+        WorkspaceApp.destroy({id: id, user: userId})
       );
     }
 

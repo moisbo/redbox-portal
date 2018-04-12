@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, Inject, Injector} from '@angular/core';
+import { Input, Output, Component, OnInit, Inject, Injector, EventEmitter} from '@angular/core';
 import { SimpleComponent } from '../../shared/form/field-simple.component';
 import { FieldBase } from '../../shared/form/field-base';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
@@ -16,6 +16,8 @@ import { GitlabService } from '../gitlab.service';
 export class ListWorkspaceDataField extends FieldBase<any> {
 
   showHeader: boolean;
+  loggedIn: boolean;
+  loading: boolean;
   validators: any;
   enabledValidators: boolean;
   relatedObjects: object[];
@@ -28,6 +30,9 @@ export class ListWorkspaceDataField extends FieldBase<any> {
   workspaces: any[];
   user: any;
   gitlabService: GitlabService;
+
+  @Output() checkLoggedIn: EventEmitter<any> = new EventEmitter<any>();
+  @Output() linkModal: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(options: any, injector: any) {
     super(options, injector);
@@ -49,11 +54,18 @@ export class ListWorkspaceDataField extends FieldBase<any> {
   }
 
   registerEvents() {
+    //TODO: this next line doesnt work because of when the form is being built
+    this.fieldMap._rootComp['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));
+
     this.fieldMap['LoginWorkspaceApp'].field['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));
+    this.fieldMap['RevokeLogin'].field['revokePermissions'].subscribe(this.revoke.bind(this));
     //let that = this;
     //this.fieldMap._rootComp['loginMessage'].subscribe(that.displayLoginMessage);
   }
 
+  revoke() {
+    this.loggedIn = false;
+  }
 
   createFormModel(valueElem: any = undefined): any {
     if (valueElem) {
@@ -79,29 +91,29 @@ export class ListWorkspaceDataField extends FieldBase<any> {
     return this.value;
   }
 
-  listWorkspaces(user: any) {
-    //TODO: How to handle metadata here
-    this.gitlabService.user()
-    .then(response => {
+  listWorkspaces() {
+    this.loading = true;
+    this.gitlabService.user().then(response => {
       if (response && response.status) {
         this.user = response.user;
-        this.getWorkspacesRelated();
+        this.workspaces = [];
+        return this.gitlabService.projectsRelatedRecord()
+        .then(response => {
+          this.loading = false;
+          this.loggedIn = this.fieldMap._rootComp.loggedIn = true;
+          this.workspaces = response;
+          this.checkLoggedIn.emit(true);
+        });
       } else {
-        // show login page because it cannot login via workspace apps
-        // this.notLoggedIn = true;
-        // this.setLoading(false);
+        this.loggedIn = this.fieldMap._rootComp.loggedIn = false;
+        this.loading = false;
+        this.checkLoggedIn.emit(false);
       }
-    });
-  }
+  });
+}
 
-  getWorkspacesRelated() {
-    this.workspaces = [];
-    this.gitlabService.projectsRelatedRecord()
-    .then(response => {
-      this.workspaces = response;
-      //this.setLoading(false);
-      //this.notLoggedIn = false;
-    });
+  linkWorkspace(id) {
+    this.linkModal.emit(id)
   }
 
 }
@@ -125,6 +137,10 @@ export class ListWorkspaceDataComponent extends SimpleComponent {
 
   ngOnInit() {
     this.field.registerEvents();
+  }
+
+  ngAfterContentInit() {
+    this.field.listWorkspaces();
   }
 
 }

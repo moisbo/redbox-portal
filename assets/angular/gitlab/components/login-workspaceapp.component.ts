@@ -18,6 +18,8 @@ import { GitlabService } from '../gitlab.service';
 export class LoginWorkspaceAppField extends FieldBase<any> {
 
   showHeader: boolean;
+  loggedIn: boolean;
+  isLoaded: boolean;
   validators: any;
   enabledValidators: boolean;
   hasInit: boolean;
@@ -52,9 +54,19 @@ export class LoginWorkspaceAppField extends FieldBase<any> {
   }
 
   registerEvents() {
-    //this.fieldMap._rootComp['loginMessage'].subscribe(this.displayLoginMessage.bind(this));
+    this.fieldMap['ListWorkspaces'].field['checkLoggedIn'].subscribe(this.checkLogin.bind(this));
+    this.fieldMap['RevokeLogin'].field['revokePermissions'].subscribe(this.revoke.bind(this));
     //let that = this;
     //this.fieldMap._rootComp['loginMessage'].subscribe(that.displayLoginMessage);
+  }
+
+  revoke(){
+    this.checkLogin(false);
+  }
+
+  checkLogin(status: boolean) {
+    this.loggedIn = this.fieldMap._rootComp.loggedIn = status;
+    this.isLoaded = true
   }
 
   createFormModel(valueElem: any = undefined): any {
@@ -115,7 +127,7 @@ export class LoginWorkspaceAppField extends FieldBase<any> {
       } else {
         // show login page because it cannot login via workspace apps
         this.displayLoginMessage({error: true, value: response.error.error_description});
-        // this.notLoggedIn = true;
+        this.loggedIn = false;
         // this.setLoading(false);
       }
     });
@@ -131,7 +143,7 @@ export class LoginWorkspaceAppField extends FieldBase<any> {
 @Component({
   selector: 'ws-login',
   template: `
-  <div class='padding-bottom-10'>
+  <div *ngIf="!field.loggedIn && field.isLoaded" class="padding-bottom-10">
     <div class="row">
       <h4>{{ field.permissionStep }}</h4>
       <form #form="ngForm"  novalidate autocomplete="off">
@@ -179,4 +191,5 @@ export class LoginWorkspaceAppComponent extends SimpleComponent {
   ngOnInit() {
     this.field.registerEvents();
   }
+
 }

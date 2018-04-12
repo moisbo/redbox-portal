@@ -70,7 +70,7 @@ module.exports = {
         workspaceDetailsLabel: 'Workspace Details',
         selectSpace: 'Select Space',
         nameWorkspace: 'Name your workspace',
-        addDescriprion: 'Add a description',
+        addDescription: 'Add a description',
         selectTemplate: 'Select Template'
       }
     },
@@ -99,11 +99,9 @@ module.exports = {
       definition: {
         name: 'RevokeLogin',
         revokeLabel: 'Revoke Login Consent',
-        name: 'RevokeModal',
         permissionRevokeTitle: 'Remove permissions:',
         permissionRevoke: 'Stash will delete your permissions',
-        allowLabel: 'Revoke',
-        closeLabel: 'Close'
+        closeLabel: 'Cancel'
       }
     }
   ]

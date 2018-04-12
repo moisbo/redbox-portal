@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, Inject, Injector} from '@angular/core';
+import { Input, Output, Component, OnInit, Inject, Injector, EventEmitter } from '@angular/core';
 import { SimpleComponent } from '../../shared/form/field-simple.component';
 import { FieldBase } from '../../shared/form/field-base';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
@@ -18,17 +18,34 @@ declare var jQuery: any;
 export class RevokeLoginWorkspaceAppField extends FieldBase<any> {
 
   showHeader: boolean;
+  loggedIn: boolean;
   validators: any;
   enabledValidators: boolean;
   hasInit: boolean;
   revokeLabel: string;
-
+  permissionRevokeTitle: string;
+  permissionRevoke: string;
+  closeLabel: string;
   gitlabService: GitlabService;
+
+  @Output() revokePermissions: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(options: any, injector: any) {
     super(options, injector);
     this.gitlabService = this.getFromInjector(GitlabService);
-    this.revokeLabel = options['revokeLabel'] || 'Revoke Login Consent';
+    this.revokeLabel = options['revokeLabel'] || '';
+    this.permissionRevokeTitle = options['permissionRevokeTitle'] || '';
+    this.permissionRevoke = options['permissionRevoke'] || '';
+    this.closeLabel = options['closeLabel'] || '';
+
+  }
+
+  registerEvents() {
+    this.fieldMap['ListWorkspaces'].field['checkLoggedIn'].subscribe(this.checkLogin.bind(this));
+  }
+
+  checkLogin(status: boolean) {
+    this.loggedIn = this.fieldMap._rootComp.loggedIn = status;
   }
 
   createFormModel(valueElem: any = undefined): any {
@@ -62,9 +79,8 @@ export class RevokeLoginWorkspaceAppField extends FieldBase<any> {
   revoke() {
     this.gitlabService.revokeToken()
     .then(response => {
-      // this.notLoggedIn = true;
-      // this.workspaces = [];
-      //TODO: if OK remove workspaces
+      this.loggedIn = false;
+      this.revokePermissions.emit();
       jQuery('#revokeModal').modal('hide');
     })
     .catch(error => {
@@ -82,7 +98,7 @@ export class RevokeLoginWorkspaceAppField extends FieldBase<any> {
 @Component({
   selector: 'ws-revokelogin',
   template: `
-  <div class='padding-bottom-10'>
+  <div *ngIf="field.loggedIn" class="padding-bottom-10">
     <div class="row">
       <button type="button" class="btn btn-danger" (click)="field.revokeModal()">{{ field.revokeLabel }}</button>
     </div>
@@ -97,8 +113,8 @@ export class RevokeLoginWorkspaceAppField extends FieldBase<any> {
           <p>{{ field.permissionRevoke }}</p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" (click)="revoke()">{{field.revokeLabel}}</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{field.closeLabel}}</button>
+          <button type="button" class="btn btn-primary" (click)="field.revoke()">{{ field.revokeLabel }}</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ field.closeLabel }}</button>
         </div>
       </div>
     </div>
@@ -108,4 +124,7 @@ export class RevokeLoginWorkspaceAppField extends FieldBase<any> {
 export class RevokeLoginWorkspaceAppComponent extends SimpleComponent {
   field: RevokeLoginWorkspaceAppField;
 
+  ngOnInit() {
+    this.field.registerEvents();
+  }
 }

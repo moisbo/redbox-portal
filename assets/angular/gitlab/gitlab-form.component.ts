@@ -96,11 +96,10 @@ export class GitlabFormComponent extends LoadableComponent {
 
   login: any;
   loading: boolean = false;
-  notLoggedIn: any;
+  loggedIn: any;
   rdmp: string;
 
-  @Output() loginMessage: EventEmitter<any> = new EventEmitter<any>();
-  @Output() workspaces: EventEmitter<any> = new EventEmitter<any>();
+  @Output() listWorkspaces: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(
     elm: ElementRef,
@@ -119,10 +118,15 @@ export class GitlabFormComponent extends LoadableComponent {
     //TODO: Find out what is this next line!
     this.fieldMap = {_rootComp: this};
 
-    this.initSubs = GitlabService.waitForInit((initStat:boolean) => {
+    // this.initSubs = GitlabService.waitForInit((initStat:boolean) => {
+    //   this.initSubs.unsubscribe();
+    //   this.loadForm();
+    // });
+
+    this.initSubs = RecordsService.waitForInit((initStat: boolean) => {
       this.initSubs.unsubscribe();
       this.loadForm();
-    });
+    })
   }
 
   loadForm() {
@@ -141,11 +145,14 @@ export class GitlabFormComponent extends LoadableComponent {
         } else {
           this.cssClasses = this.formDef.viewCssClasses;
         }
-        this.needsSave = false;
+        //TODO: here put is loggedIn
+        this.loggedIn = false;
         if (form.fieldsMeta) {
           this.fields = form.fieldsMeta;
           this.rebuildForm();
           this.watchForChanges();
+          //TODO: check if this is correct. list-workspaces is ngAfterContentInit to start
+          //this.listWorkspaces.emit();
         }
       });
     }).catch((err:any) => {
@@ -175,7 +182,7 @@ export class GitlabFormComponent extends LoadableComponent {
     this.setLoading(false);
     if (this.editMode) {
       this.form.valueChanges.subscribe((data:any) => {
-        this.needsSave = true;
+        //this.needsSave = true;
       });
     }
   }

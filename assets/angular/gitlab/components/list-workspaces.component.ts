@@ -34,6 +34,7 @@ export class ListWorkspaceDataField extends FieldBase<any> {
 
   @Output() checkLoggedIn: EventEmitter<any> = new EventEmitter<any>();
   @Output() linkModal: EventEmitter<any> = new EventEmitter<any>();
+  @Output() setWorkspaceUser: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(options: any, injector: any) {
     super(options, injector);
@@ -97,6 +98,7 @@ export class ListWorkspaceDataField extends FieldBase<any> {
     this.gitlabService.user().then(response => {
       if (response && response.status) {
         this.user = response.user;
+        this.setWorkspaceUser.emit(this.user);
         this.workspaces = [];
         return this.gitlabService.projectsRelatedRecord()
         .then(response => {

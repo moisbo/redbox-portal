@@ -5,7 +5,7 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
 import * as _ from "lodash-lib";
 
 import { GitlabService } from '../gitlab.service';
-import { Creation, CreationAlert, Template, Checks, CurrentWorkspace, Group, WsUser } from './shared';
+import { Creation, CreationAlert, Template, Checks, CurrentWorkspace, Group, WorkspaceUser } from './shared';
 
 // STEST-22
 declare var jQuery: any;
@@ -39,20 +39,21 @@ export class CreateWorkspaceField extends FieldBase<any> {
   creationAlert: CreationAlert;
   processing: boolean = false;
   currentWorkspace: CurrentWorkspace;
-  wsUser: WsUser;
+  workspaceUser: WorkspaceUser;
   groups: Group[];
   templates: Template[];
 
   gitlabService: GitlabService;
   rdmp: string;
   recordMap: any[];
+  branch: string;
 
   constructor(options: any, injector: any) {
     super(options, injector);
     this.gitlabService = this.getFromInjector(GitlabService);
     this.checks = new Checks();
     this.currentWorkspace = new CurrentWorkspace();
-    this.wsUser = new WsUser();
+    this.workspaceUser = new WorkspaceUser();
     this.creation = new Creation();
     this.createLabel = options['createLabel'] || '';
     this.cancelLabel = options['cancelLabel'] || '';
@@ -63,6 +64,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
     this.addDescription = options['addDescription'] || '';
     this.selectTemplate = options['selectTemplate'] || '';
     this.recordMap = options['recordMap'] || [];
+    this.branch = options['branch'] || '';
   }
 
   init() {
@@ -103,10 +105,11 @@ export class CreateWorkspaceField extends FieldBase<any> {
 
   loadCreateWorkspaceModal() {
     //To populate dropdown with first space and template
+    this.workspaceUser = this.fieldMap._rootComp.workspaceUser;
     this.loadingModal = true;
     this.creation.clear();
     let group = new Group();
-    group.id = this.wsUser.id; group.path = this.wsUser.username; group.isUser = true;
+    group.id = this.workspaceUser.id; group.path = this.workspaceUser.username; group.isUser = true;
     this.groups = [group];
     this.creation.group = this.groups[0];
     this.templates = [{pathWithNamespace: undefined}];
@@ -176,7 +179,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
         this.creationAlert.message = 'Linking workspace';
         this.creationAlert.class = 'warning';
         this.creation.namespace = this.creation.group.path;
-        return this.gitlabService.link(this.rdmp, this.creation, this.recordMap)
+        return this.gitlabService.link({rdmp: this.rdmp, branch: this.branch, currentWorkspace: this.creation, recordMap: this.recordMap})
         .then(response => {
           if(response.status == false){
             throw new Error(response.message.description);
@@ -206,7 +209,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
         this.creationAlert.message = 'Linking workspace';
         this.creationAlert.class = 'warning';
         this.creation.namespace = this.creation.group.path;
-        return this.gitlabService.link(this.rdmp, this.creation, this.recordMap)
+        return this.gitlabService.link({rdmp:this.rdmp, branch: this.branch, currentWorkspace: this.creation, recordMap: this.recordMap})
         .then(response => {
           if(response.status == false){
             throw new Error(response.message.description);

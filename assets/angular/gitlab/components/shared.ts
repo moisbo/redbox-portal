@@ -51,7 +51,7 @@ export class CurrentWorkspace {
   web_url: string = ''
 }
 
-export class WsUser {
+export class WorkspaceUser {
   username: string;
   id: string;
 }

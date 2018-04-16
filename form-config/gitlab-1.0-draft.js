@@ -71,6 +71,7 @@ module.exports = {
           {record: 'url', ele: 'http_url_to_repo'},
           {record: 'namespace', ele: 'namespace.path'}
         ],
+        branch: 'master',
         createLabel: 'Create',
         cancelLabel: 'Cancel',
         createWorkspaceLabel: 'Create Workspace',

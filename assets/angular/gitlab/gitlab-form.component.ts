@@ -15,6 +15,7 @@ import { CreateWorkspaceField, CreateWorkspaceComponent } from './components/cre
 import { RevokeLoginWorkspaceAppField, RevokeLoginWorkspaceAppComponent } from './components/revokelogin-workspaceapp.component';
 import { LinkModalWorkspaceField, LinkModalWorkspaceComponent } from './components/linkmodal-workspace.component';
 
+import { WorkspaceUser } from './components/shared';
 // STEST-22
 declare var jQuery: any;
 
@@ -99,8 +100,7 @@ export class GitlabFormComponent extends LoadableComponent {
   loading: boolean = false;
   loggedIn: any;
   rdmp: string;
-
-  @Output() listWorkspaces: EventEmitter<any> = new EventEmitter<any>();
+  workspaceUser: WorkspaceUser;
 
   constructor(
     elm: ElementRef,
@@ -119,6 +119,7 @@ export class GitlabFormComponent extends LoadableComponent {
     //TODO: Find out what is this next line!
     this.fieldMap = {_rootComp: this};
 
+    //TODO: do I have to wait for gitlabservice too?
     // this.initSubs = GitlabService.waitForInit((initStat:boolean) => {
     //   this.initSubs.unsubscribe();
     //   this.loadForm();
@@ -128,6 +129,10 @@ export class GitlabFormComponent extends LoadableComponent {
       this.initSubs.unsubscribe();
       this.loadForm();
     })
+  }
+
+  registerEvents() {
+    this.fieldMap['ListWorkspaces'].field['setWorkspaceUser'].subscribe(this.setWorkspaceUser.bind(this));
   }
 
   loadForm() {
@@ -155,6 +160,7 @@ export class GitlabFormComponent extends LoadableComponent {
           this.watchForChanges();
           //TODO: check if this is correct. list-workspaces is ngAfterContentInit to start
           //this.listWorkspaces.emit();
+          this.registerEvents();
         }
       });
     }).catch((err:any) => {
@@ -189,6 +195,8 @@ export class GitlabFormComponent extends LoadableComponent {
     }
   }
 
-
+  setWorkspaceUser(workspaceUser: WorkspaceUser) {
+    this.workspaceUser = workspaceUser;
+  }
 
 }

@@ -13,6 +13,7 @@ import { ListWorkspaceDataField, ListWorkspaceDataComponent } from './components
 import { LoginWorkspaceAppField, LoginWorkspaceAppComponent } from './components/login-workspaceapp.component';
 import { CreateWorkspaceField, CreateWorkspaceComponent } from './components/create-workspace.component';
 import { RevokeLoginWorkspaceAppField, RevokeLoginWorkspaceAppComponent } from './components/revokelogin-workspaceapp.component';
+import { LinkModalWorkspaceField, LinkModalWorkspaceComponent } from './components/linkmodal-workspace.component';
 
 // STEST-22
 declare var jQuery: any;
@@ -135,6 +136,7 @@ export class GitlabFormComponent extends LoadableComponent {
       'LoginWorkspaceAppField': { 'meta': LoginWorkspaceAppField, 'comp': LoginWorkspaceAppComponent },
       'CreateWorkspaceField': { 'meta': CreateWorkspaceField, 'comp': CreateWorkspaceComponent },
       'RevokeLoginWorkspaceAppField': { 'meta': RevokeLoginWorkspaceAppField, 'comp': RevokeLoginWorkspaceAppComponent },
+      'LinkModalWorkspaceField': { 'meta': LinkModalWorkspaceField, 'comp': LinkModalWorkspaceComponent },
     });
 
     this.RecordsService.getForm(this.oid, this.recordType, this.editMode).then((obs:any) => {

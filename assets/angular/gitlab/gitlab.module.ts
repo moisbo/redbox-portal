@@ -11,7 +11,7 @@ import { LoginWorkspaceAppComponent } from './components/login-workspaceapp.comp
 import { ListWorkspaceDataComponent } from './components/list-workspaces.component';
 import { CreateWorkspaceComponent } from './components/create-workspace.component';
 import { RevokeLoginWorkspaceAppComponent } from './components/revokelogin-workspaceapp.component';
-import { LinkModalWorkspaceComponent } from './components/linkmodal-workspaceapp.component';
+import { LinkModalWorkspaceComponent } from './components/linkmodal-workspace.component';
 
 @NgModule({
   imports: [ BrowserModule, HttpModule, ReactiveFormsModule,

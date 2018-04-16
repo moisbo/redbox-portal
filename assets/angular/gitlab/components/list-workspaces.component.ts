@@ -30,6 +30,7 @@ export class ListWorkspaceDataField extends FieldBase<any> {
   workspaces: any[];
   user: any;
   gitlabService: GitlabService;
+  rdmp: string;
 
   @Output() checkLoggedIn: EventEmitter<any> = new EventEmitter<any>();
   @Output() linkModal: EventEmitter<any> = new EventEmitter<any>();
@@ -43,7 +44,6 @@ export class ListWorkspaceDataField extends FieldBase<any> {
     this.columns = options['columns'] || [];
     this.rdmpLinkLabel = options['rdmpLinkLabel'] || 'Plan';
     this.syncLabel = options['syncLabel'] || 'Sync';
-
     var relatedObjects = this.relatedObjects;
     this.value = options['value'] || this.setEmptyValue();
 
@@ -54,13 +54,14 @@ export class ListWorkspaceDataField extends FieldBase<any> {
   }
 
   registerEvents() {
-    //TODO: this next line doesnt work because of when the form is being built
-    this.fieldMap._rootComp['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));
-
-    this.fieldMap['LoginWorkspaceApp'].field['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));
+    this.fieldMap['LoginWorkspaceApp'].field['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));    //TODO: this next line doesnt work because of when the form is being built
     this.fieldMap['RevokeLogin'].field['revokePermissions'].subscribe(this.revoke.bind(this));
     //let that = this;
     //this.fieldMap._rootComp['loginMessage'].subscribe(that.displayLoginMessage);
+  }
+
+  init(){
+    this.rdmp = this.fieldMap._rootComp.rdmp;
   }
 
   revoke() {
@@ -112,8 +113,8 @@ export class ListWorkspaceDataField extends FieldBase<any> {
   });
 }
 
-  linkWorkspace(id) {
-    this.linkModal.emit(id)
+  linkWorkspace(item) {
+    this.linkModal.emit({rdmp: this.fieldMap._rootComp.rdmp, workspace: item});
   }
 
 }
@@ -137,6 +138,7 @@ export class ListWorkspaceDataComponent extends SimpleComponent {
 
   ngOnInit() {
     this.field.registerEvents();
+    this.field.init();
   }
 
   ngAfterContentInit() {

@@ -45,6 +45,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
 
   gitlabService: GitlabService;
   rdmp: string;
+  recordMap: any[];
 
   constructor(options: any, injector: any) {
     super(options, injector);
@@ -61,12 +62,13 @@ export class CreateWorkspaceField extends FieldBase<any> {
     this.nameWorkspace = options['nameWorkspace'] || '';
     this.addDescription = options['addDescription'] || '';
     this.selectTemplate = options['selectTemplate'] || '';
+    this.recordMap = options['recordMap'] || [];
   }
 
   init() {
     this.rdmp = this.fieldMap._rootComp.rdmp;
   }
-  
+
   registerEvents() {
     this.fieldMap['ListWorkspaces'].field['checkLoggedIn'].subscribe(this.checkLogin.bind(this));
   }
@@ -170,11 +172,11 @@ export class CreateWorkspaceField extends FieldBase<any> {
         //TODO: improve this assignment in case of error.
         const name = response.message.error.error.message.name || '';
         throw new Error(_.first(name));
-      }else {
+      } else {
         this.creationAlert.message = 'Linking workspace';
         this.creationAlert.class = 'warning';
         this.creation.namespace = this.creation.group.path;
-        return this.createLink(this.creation)
+        return this.gitlabService.link(this.rdmp, this.creation, this.recordMap)
         .then(response => {
           if(response.status == false){
             throw new Error(response.message.description);
@@ -200,11 +202,11 @@ export class CreateWorkspaceField extends FieldBase<any> {
         //TODO: improve this assignment in case of error.
         const name = response.message.error.error.message.name || '';
         throw new Error(_.first(name));
-      }else {
+      } else {
         this.creationAlert.message = 'Linking workspace';
         this.creationAlert.class = 'warning';
         this.creation.namespace = this.creation.group.path;
-        return this.createLink(this.creation)
+        return this.gitlabService.link(this.rdmp, this.creation, this.recordMap)
         .then(response => {
           if(response.status == false){
             throw new Error(response.message.description);
@@ -231,10 +233,6 @@ export class CreateWorkspaceField extends FieldBase<any> {
 
   checkName() {
     //TODO: check workspace name if it is available
-  }
-
-  createLink(project: any) {
-    return this.gitlabService.link(this.rdmp, project);
   }
 
 

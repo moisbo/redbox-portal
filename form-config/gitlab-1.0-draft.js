@@ -44,9 +44,9 @@ module.exports = {
       definition: {
         name: 'ListWorkspaces',
         columns: [
-          {'label': 'Name', 'property': 'Name'},
-          {'label': 'Description', 'property': 'Description'},
-          {'label': 'Location', 'property': 'web_url'}
+          {'label': 'Name', 'property': 'name'},
+          {'label': 'Description', 'property': 'description'},
+          {'label': 'Location', 'property': 'web_url', 'link': 'true'}
         ],
         rdmpLinkLabel: 'Plan',
         syncLabel: 'Sync',
@@ -64,6 +64,13 @@ module.exports = {
       showHeader: true,
       definition: {
         name: 'CreateWorkspace',
+        recordMap: [
+          {record: 'completeName', ele: 'name_with_namespace'},
+          {record: 'id', ele: 'id'},
+          {record: 'shortName', ele: 'name'},
+          {record: 'url', ele: 'http_url_to_repo'},
+          {record: 'namespace', ele: 'namespace.path'}
+        ],
         createLabel: 'Create',
         cancelLabel: 'Cancel',
         createWorkspaceLabel: 'Create Workspace',
@@ -72,6 +79,35 @@ module.exports = {
         nameWorkspace: 'Name your workspace',
         addDescription: 'Add a description',
         selectTemplate: 'Select Template'
+      }
+    },
+    {
+      class: 'LinkModalWorkspaceField',
+      showHeader: true,
+      definition: {
+        name: 'LinkModal',
+        workspaceDefinition: [
+          {label: 'Name', name: 'name_with_namespace'},
+          {label: 'URL', name: 'web_url'}
+        ],
+        recordMap: [
+          {record: 'completeName', ele: 'name_with_namespace'},
+          {record: 'id', ele: 'id'},
+          {record: 'shortName', ele: 'name'},
+          {record: 'url', ele: 'http_url_to_repo'},
+          {record: 'namespace', ele: 'namespace.path'}
+        ],
+        checkField: 'name_with_namespace',
+        checkBranch: 'master',
+        linkModalTitle: 'Workspace Linking',
+        workspaceDetailsTitle: 'Workspace Details',
+        processingLabel: 'Processing Link',
+        processingMessage: 'Checking your master workspace link ...',
+        comparingLabel: 'Checking current links ...',
+        statusLabel: 'No links, Linking to workspace ...',
+        processingSuccess: 'Your workspace was linked succesfully',
+        processingFail: 'Your workspace is linked with another RDMP',
+        closeLabel: 'Ok'
       }
     },
     {

@@ -25,7 +25,8 @@ export module Services {
       'infoFormUserId',
       'createWorkspaceInfo',
       'workspaceAppFromUserId',
-      'removeAppFromUserId'
+      'removeAppFromUserId',
+      'mapToRecord'
     ];
 
     config: any;
@@ -60,6 +61,14 @@ export module Services {
       const cookie = request.cookie('' + keyvalue);
       jar.setCookie(cookie, config.host);
       return jar;
+    }
+
+    mapToRecord(obj: any, recordMap: any) {
+      let newObj = {};
+      _.each(recordMap, (value) => {
+        newObj[value.record] = _.get(obj, value.ele);
+      });
+      return newObj;
     }
 
     createWorkspaceRecord(config: any, username: string, project: any, workflowStage: string) {

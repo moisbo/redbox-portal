@@ -33,6 +33,7 @@ export module Services {
       'updateProject',
       'groups',
       'templates',
+      'addWorkspaceInfo'
     ]
 
     token(config: any, username: string, password: string) {
@@ -88,13 +89,13 @@ export module Services {
       return Observable.fromPromise(deleteRequest);
     }
 
-    addWorkspaceInfo(config: any, token: string, project: any, workspaceLink: string, filePath: string) {
-      const projectNameSpace = encodeURIComponent(project.namespace + '/' + project.name);
+    addWorkspaceInfo(config: any, token: string, branch: string, project: any, workspaceLink: string, filePath: string) {
+      const projectNameSpace = encodeURIComponent(project.path_with_namespace);
       const post = request({
         uri: config.host + `/api/v4/projects/${projectNameSpace}/repository/files/${filePath}?access_token=${token}`,
         method: 'POST',
         body: {
-          branch: 'master',
+          branch: branch,
           content: workspaceLink,
           author_name: 'Stash',
           commit_message: 'provisioner bot'//TODO: define message via config file or form?
@@ -104,10 +105,10 @@ export module Services {
       return Observable.fromPromise(post);
     }
 
-    readFileFromRepo(config: any, token: string, projectNameSpace: string, filePath: string) {
+    readFileFromRepo(config: any, token: string, branch: string, projectNameSpace: string, filePath: string) {
       const encodeProjectNameSpace = encodeURIComponent(projectNameSpace);
       const get = request({
-        uri: config.host + `/api/v4/projects/${encodeProjectNameSpace}/repository/files/${filePath}?ref=master&access_token=${token}&namespace=${encodeProjectNameSpace}`,
+        uri: config.host + `/api/v4/projects/${encodeProjectNameSpace}/repository/files/${filePath}?ref=${branch}&access_token=${token}&namespace=${encodeProjectNameSpace}`,
         json: true,
         method: 'GET',
         resolveWithFullResponse: true

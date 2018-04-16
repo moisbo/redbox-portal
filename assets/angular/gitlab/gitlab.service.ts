@@ -117,16 +117,15 @@ export class GitlabService extends BaseService {
     });
   }
 
-  link(rdmpId: string, project: any) {
+  link({rdmp, branch, currentWorkspace, recordMap}) {
     const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/link';
     return this.http.post(
       wsUrl,
-      {rdmpId: rdmpId, project: project},
+      {rdmpId: rdmp, branch: branch, project: currentWorkspace, recordMap: recordMap},
       this.options
     )
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     })
     .catch((res: any) => {
@@ -144,21 +143,19 @@ export class GitlabService extends BaseService {
     )
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     });
   }
 
-  checkRepo(projectNameSpace: string) {
+  checkRepo(fieldToCheck: string, branch: string) {
     const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/checkRepo';
     return this.http.post(
       wsUrl,
-      {projectNameSpace: projectNameSpace},
+      {projectNameSpace: fieldToCheck, branch: branch},
       this.options
     )
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     });
   }
@@ -172,7 +169,6 @@ export class GitlabService extends BaseService {
     )
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     });
   }
@@ -187,7 +183,6 @@ export class GitlabService extends BaseService {
     )
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     });
   }
@@ -202,7 +197,6 @@ export class GitlabService extends BaseService {
     )
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     });
   }
@@ -218,7 +212,6 @@ export class GitlabService extends BaseService {
     .delay(5000)
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     });
   }
@@ -234,7 +227,6 @@ export class GitlabService extends BaseService {
     .delay(5000)
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     });
   }
@@ -248,7 +240,6 @@ export class GitlabService extends BaseService {
     )
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     });
   }
@@ -262,7 +253,6 @@ export class GitlabService extends BaseService {
     )
     .toPromise()
     .then((res: any) => {
-      console.log(res);
       return this.extractData(res);
     });
   }

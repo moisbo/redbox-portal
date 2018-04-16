@@ -44,7 +44,7 @@ export module Controllers {
       const workspaceConfig = sails.config.local.workspaces;
       this.config = {
         host: gitlabConfig.host,
-        recordType: workspaceConfig.recordType,
+        recordType: gitlabConfig.recordType,
         formName: gitlabConfig.formName,
         appName: gitlabConfig.appName,
         parentRecord: workspaceConfig.parentRecord,
@@ -165,6 +165,7 @@ export module Controllers {
         this.ajaxFail(req, res, `User not authenticated`);
       } else {
         const userId = req.user.id;
+        const branch = req.param('branch') || 'master';
         return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
         .flatMap(response => {
           gitlab = response.info;
@@ -174,7 +175,7 @@ export module Controllers {
           let obs = [];
           currentProjects = response.slice(0);
           for (let r of currentProjects) {
-            obs.push(GitlabService.readFileFromRepo(this.config, gitlab.accessToken.access_token, r.path_with_namespace, 'stash.workspace'));
+            obs.push(GitlabService.readFileFromRepo(this.config, gitlab.accessToken.access_token, branch, r.path_with_namespace, 'stash.workspace'));
           }
           return Observable.merge(...obs);
         })
@@ -207,7 +208,8 @@ export module Controllers {
         this.config.brandingAndPortalUrl = sails.getBaseUrl() + BrandingService.getBrandAndPortalPath(req);
         const project = req.param('project');
         const rdmpId = req.param('rdmpId');
-
+        const recordMap = req.param('recordMap');
+        const branch = req.param('branch') || 'master';
         let workspaceId = null;
         let gitlab = {};
 
@@ -219,15 +221,16 @@ export module Controllers {
         }).flatMap(response => {
           gitlab = response.info;
           const username = req.user.username;
-          return WorkspaceService.createWorkspaceRecord(this.config, username, project, 'draft');
+          const record = WorkspaceService.mapToRecord(project, recordMap);
+          return WorkspaceService.createWorkspaceRecord(this.config, username, record, 'draft');
         }).flatMap(response => {
           workspaceId = response.oid;
           sails.log.debug('addWorkspaceInfo');
-          return GitlabService.addWorkspaceInfo(this.config, gitlab.accessToken.access_token, project, rdmpId + '.' + workspaceId, 'stash.workspace');
+          return GitlabService.addWorkspaceInfo(this.config, gitlab.accessToken.access_token, branch, project, rdmpId + '.' + workspaceId, 'stash.workspace');
         })
         .flatMap(response => {
           sails.log.debug('addParentRecordLink');
-          return GitlabService.getRecordMeta(this.config, rdmpId);
+          return WorkspaceService.getRecordMeta(this.config, rdmpId);
         })
         .flatMap(recordMetadata => {
           sails.log.debug('recordMetadata');
@@ -255,13 +258,14 @@ export module Controllers {
       if (!req.isAuthenticated()) {
         this.ajaxFail(req, res, `User not authenticated`);
       } else {
-        const projectNameSpace = req.param('projectNameSpace');
+        const fieldToCheck = req.param('fieldToCheck');
+        const branch = req.param('branch') || 'master';
         let gitlab = {};
         const userId = req.user.id;
         return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
         .flatMap(response => {
           const gitlab = response.info;
-          return GitlabService.readFileFromRepo(this.config, gitlab.accessToken.access_token, projectNameSpace, 'stash.workspace');
+          return GitlabService.readFileFromRepo(this.config, gitlab.accessToken.access_token, branch, fieldToCheck, 'stash.workspace');
         }).subscribe(response => {
           sails.log.debug('checkLink:getRecordMeta');
           const parsedResponse = this.parseResponseFromRepo(response);
@@ -270,7 +274,7 @@ export module Controllers {
           this.ajaxOk(req, res, null, wI);
         }, error => {
           sails.log.error(error);
-          const errorMessage = `Failed check link workspace project: ${projectNameSpace}`;
+          const errorMessage = `Failed check link workspace project: ${fieldToCheck}`;
           sails.log.error(errorMessage);
           this.ajaxFail(req, res, errorMessage, error);
         });
@@ -287,7 +291,7 @@ export module Controllers {
       return WorkspaceService.provisionerUser(this.config.provisionerUser)
       .flatMap(response => {
         this.config.redboxHeaders['Authorization'] = 'Bearer ' + response.token;
-        return GitlabService.getRecordMeta(this.config, rdmpId);
+        return WorkspaceService.getRecordMeta(this.config, rdmpId);
       })
       .subscribe(recordMetadata => {
         sails.log.debug('recordMetadata');

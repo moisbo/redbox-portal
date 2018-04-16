@@ -237,6 +237,8 @@ export class AnchorOrButton extends FieldBase<string> {
   type: string;
   isDisabledFn: any;
   showPencil: boolean;
+  imageURI: string;
+  imageALT: string;
 
   constructor(options: any, injector: any) {
     super(options, injector);
@@ -246,6 +248,8 @@ export class AnchorOrButton extends FieldBase<string> {
     this.controlType = options['controlType'] || 'button';
     this.hasControl = false;
     this.showPencil = options['showPencil'] || false;
+    this.imageURI = options['imageURI'] || '';
+    this.imageALT = options['imageALT'] || '';
   }
 }
 

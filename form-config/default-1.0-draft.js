@@ -1202,9 +1202,11 @@ module.exports = {
                   definition: {
                     label: 'GitLab',
                     value: '/@branding/@portal/record/gitlab/edit?rdmp=@oid',
-                    cssClasses: 'btn btn-large btn-info margin-15',
+                    cssClasses: 'img-thumbnail margin-15',
                     showPencil: false,
-                    controlType: 'anchor'
+                    controlType: 'anchorWithImage',
+                    imageURI: '/angular/gitlab/images/gitlab.png',
+                    imageALT: 'gitlab'
                   },
                   variableSubstitutionFields: ['value']
                 },
@@ -1214,9 +1216,11 @@ module.exports = {
                   definition: {
                     label: 'OMERO',
                     value: '/@branding/@portal/record/omero/edit?rdmp=@oid',
-                    cssClasses: 'btn btn-large btn-info margin-15',
+                    cssClasses: 'img-thumbnail margin-15',
                     showPencil: false,
-                    controlType: 'anchor'
+                    controlType: 'anchorWithImage',
+                    imageURI: '/angular/omero/images/omero.png',
+                    imageALT: 'omero'
                   },
                   variableSubstitutionFields: ['value']
                 }

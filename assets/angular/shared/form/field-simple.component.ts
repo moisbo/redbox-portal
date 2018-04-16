@@ -453,6 +453,7 @@ export class CancelButtonComponent extends SimpleComponent {
   template: `
   <button *ngIf="field.controlType=='button'" type="{{field.type}}" [ngClass]="field.cssClasses" (click)="onClick($event)" [disabled]="isDisabled()">{{field.label}}</button>
   <a *ngIf="field.controlType=='anchor'" href='{{field.value}}' [ngClass]="field.cssClasses" ><span *ngIf="field.showPencil" class="glyphicon glyphicon-pencil">&nbsp;</span>{{field.label}}</a>
+  <a *ngIf="field.controlType=='anchorWithImage'" href='{{field.value}}' [ngClass]="field.cssClasses"><img src="{{field.imageURI}}" alt="{{field.imageALT}}"/></a>
   `,
 })
 export class AnchorOrButtonComponent extends SimpleComponent {

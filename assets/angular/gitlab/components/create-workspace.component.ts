@@ -31,6 +31,10 @@ export class CreateWorkspaceField extends FieldBase<any> {
   nameWorkspace: string;
   addDescription: string;
   selectTemplate: string;
+  nameWorkspaceValidation: string;
+  descriptionWorkspaceValidation: string;
+  workspaceCreated: string;
+  creatingWorkspace: string;
 
   loadingModal: boolean;
 
@@ -65,6 +69,10 @@ export class CreateWorkspaceField extends FieldBase<any> {
     this.selectTemplate = options['selectTemplate'] || '';
     this.recordMap = options['recordMap'] || [];
     this.branch = options['branch'] || '';
+    this.nameWorkspaceValidation = options['nameWorkspaceValidation'] || '';
+    this.descriptionWorkspaceValidation = options['descriptionWorkspaceValidation'] || '';
+    this.workspaceCreated = options['workspaceCreated'] || '';
+    this.creatingWorkspace = options['creatingWorkspace'] || '';
   }
 
   init() {
@@ -131,7 +139,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
 
   create() {
     if(this.validateWorkspace()){
-      this.creationAlert.message = 'Creating workspace';
+      this.creationAlert.message = this.creatingWorkspace;
       this.creationAlert.creationAlert = 'info';
       if(this.creation.template.pathWithNamespace){
         this.createWithTemplate();
@@ -146,12 +154,12 @@ export class CreateWorkspaceField extends FieldBase<any> {
 
   validateWorkspace() {
     if(!this.creation.name) {
-      this.creation.validateMessage = 'Name of the workspace is required';
+      this.creation.validateMessage = this.nameWorkspaceValidation;
       this.creationAlert.class = 'danger';
       return false;
     }
     if(!this.creation.description) {
-      this.creation.validateMessage = 'Description of the workspace is required';
+      this.creation.validateMessage = this.descriptionWorkspaceValidation;
       this.creationAlert.class = 'danger';
       return false;
     }
@@ -184,7 +192,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
           if(response.status == false){
             throw new Error(response.message.description);
           }
-          this.creationAlert.message = 'Workspace created and linked';
+          this.creationAlert.message = this.workspaceCreated;
           this.creationAlert.class = 'success';
         });
       }
@@ -214,7 +222,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
           if(response.status == false){
             throw new Error(response.message.description);
           }
-          this.creationAlert.message = 'Workspace created and linked';
+          this.creationAlert.message = this.workspaceCreated;
           this.creationAlert.class = 'success';
         });
       }
@@ -256,7 +264,6 @@ if(typeof aotMode == 'undefined') {
   templateUrl: createModalWorkspaceTemplate
 })
 export class CreateWorkspaceComponent extends SimpleComponent {
-
   field: CreateWorkspaceField;
 
   ngOnInit() {

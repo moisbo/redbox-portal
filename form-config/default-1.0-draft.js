@@ -1185,13 +1185,18 @@ module.exports = {
                   showHeader: true,
                   definition: {
                     name: 'workspaces',
-                    columns: [{
+                    columns: [
+                      {
                         "label": "Title",
                         "property": "title"
                       },
                       {
                         "label": "Description",
                         "property": "description"
+                      },
+                      {
+                        "label": "Location",
+                        "property": "location"
                       }
                     ]
                   }

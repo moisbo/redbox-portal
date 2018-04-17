@@ -71,12 +71,12 @@ export module Services {
       return newObj;
     }
 
-    createWorkspaceRecord(config: any, username: string, project: any, workflowStage: string) {
+    createWorkspaceRecord(config: any, username: string, project: any, recordType: string, workflowStage: string) {
       // TODO: how to get the workflowStage??
       // TODO: Get the project metadata from the form, move this logic to the controller
       sails.log.debug(config);
       const post = request({
-        uri: config.brandingAndPortalUrl + `/api/records/metadata/${config.recordType}`,
+        uri: config.brandingAndPortalUrl + `/api/records/metadata/${recordType}`,
         method: 'POST',
         body: {
           authorization: {
@@ -85,11 +85,7 @@ export module Services {
             editPending:[],
             viewPending:[]
           },
-          metadata: {
-            title: project.title,
-            description: project.description,
-            type: project.type
-          },
+          metadata: project,
           workflowStage: workflowStage
         },
         json: true,

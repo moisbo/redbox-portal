@@ -19,7 +19,7 @@
             <div class="form-group">
               <h4>{{ field.selectSpace }}</h4>
               <select class="form-control" [(ngModel)]="field.creation.group" name="creationNamespace">
-                <option *ngFor="let g of groups" [ngValue]="g"
+                <option *ngFor="let g of field.groups" [ngValue]="g"
                 [selected]="field.creation.group === g">{{ g.path }}</option>
               </select>
             </div>

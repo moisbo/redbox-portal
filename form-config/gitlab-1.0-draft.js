@@ -67,9 +67,11 @@ module.exports = {
         recordMap: [
           {record: 'completeName', ele: 'name_with_namespace'},
           {record: 'id', ele: 'id'},
-          {record: 'shortName', ele: 'name'},
-          {record: 'url', ele: 'http_url_to_repo'},
-          {record: 'namespace', ele: 'namespace.path'}
+          {record: 'name', ele: 'name'},
+          {record: 'location', ele: 'http_url_to_repo'},
+          {record: 'namespace', ele: 'namespace.path'},
+          {record: 'description', ele: 'description'},
+          {record: 'title', ele: 'name_with_namespace'}
         ],
         branch: 'master',
         createLabel: 'Create',
@@ -79,7 +81,11 @@ module.exports = {
         selectSpace: 'Select Space',
         nameWorkspace: 'Name your workspace',
         addDescription: 'Add a description',
-        selectTemplate: 'Select Template'
+        selectTemplate: 'Select Template',
+        nameWorkspaceValidation: 'Name of the workspace is required',
+        descriptionWorkspaceValidation: 'Description of the workspace is required',
+        creatingWorkspace: 'Creating Workspace',
+        workspaceCreated: 'Workspace Created'
       }
     },
     {
@@ -94,9 +100,11 @@ module.exports = {
         recordMap: [
           {record: 'completeName', ele: 'name_with_namespace'},
           {record: 'id', ele: 'id'},
-          {record: 'shortName', ele: 'name'},
-          {record: 'url', ele: 'http_url_to_repo'},
-          {record: 'namespace', ele: 'namespace.path'}
+          {record: 'name', ele: 'name'},
+          {record: 'location', ele: 'http_url_to_repo'},
+          {record: 'namespace', ele: 'namespace.path'},
+          {record: 'description', ele: 'description'},
+          {record: 'title', ele: 'name_with_namespace'}
         ],
         checkField: 'name_with_namespace',
         checkBranch: 'master',
@@ -140,6 +148,18 @@ module.exports = {
         permissionRevoke: 'Stash will delete your permissions',
         closeLabel: 'Cancel'
       }
+    },
+    {
+      class: "AnchorOrButton",
+      viewOnly: false,
+      definition: {
+        label: 'Back to your Plan',
+        value: '/@branding/@portal/record/edit/@rdmp',
+        cssClasses: 'btn btn-large btn-info',
+        showPencil: false,
+        controlType: 'anchor'
+      },
+      variableSubstitutionFields: ['value']
     }
   ]
 }

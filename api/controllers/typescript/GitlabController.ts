@@ -45,6 +45,7 @@ export module Controllers {
       this.config = {
         host: gitlabConfig.host,
         recordType: gitlabConfig.recordType,
+        workflowStage: gitlabConfig.workflowStage,
         formName: gitlabConfig.formName,
         appName: gitlabConfig.appName,
         parentRecord: workspaceConfig.parentRecord,
@@ -221,8 +222,9 @@ export module Controllers {
         }).flatMap(response => {
           gitlab = response.info;
           const username = req.user.username;
-          const record = WorkspaceService.mapToRecord(project, recordMap);
-          return WorkspaceService.createWorkspaceRecord(this.config, username, record, 'draft');
+          let record = WorkspaceService.mapToRecord(project, recordMap);
+          record = _.merge(record, {type: this.config.recordType});
+          return WorkspaceService.createWorkspaceRecord(this.config, username, record, this.config.recordType, this.config.workflowStage);
         }).flatMap(response => {
           workspaceId = response.oid;
           sails.log.debug('addWorkspaceInfo');
@@ -240,9 +242,12 @@ export module Controllers {
               recordMetadata.workspaces.push({id: workspaceId});
             }
           }
-          return GitlabService.updateRecordMeta(this.config, recordMetadata, rdmpId);
+          return WorkspaceService.updateRecordMeta(this.config, recordMetadata, rdmpId);
         })
         .subscribe(response => {
+          sails.log.debug('updateRecordMeta');
+          sails.log.debug(response);
+
           this.ajaxOk(req, res, null, response);
         }, error => {
           sails.log.error(error);
@@ -496,6 +501,7 @@ class Config {
   host: string;
   recordType: string;
   formName: string;
+  workflowStage: string;
   appName: string;
   parentRecord: string;
   provisionerUser: string;

@@ -11,7 +11,7 @@
         <tr *ngFor="let item of field.workspaces">
           <ng-container *ngFor="let column of field.columns">
           <td *ngIf="column.show != false">
-            <span *ngIf="column.link; else noProcessing "><a target="_blank" href="{{ item[column.property] }}">{{ item[column.property] }}</a></span>
+            <span *ngIf="column.link; else noProcessing "><a target="_blank" rel="noopener noreferrer" href="{{ item[column.property] }}">{{ item[column.property] }}</a></span>
             <ng-template #multivalue></ng-template>
             <ng-template #noProcessing><span >{{ item[column.property] }}</span></ng-template>
           </td>

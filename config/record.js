@@ -25,6 +25,11 @@ module.exports.record = {
       source: 'request',
       type: 'param',
       field: 'oid'
+    },
+    '@rdmp': {
+      source: 'request',
+      type: 'query',
+      field: 'rdmp'
     }
   },
   export: {

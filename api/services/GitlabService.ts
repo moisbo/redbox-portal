@@ -56,7 +56,16 @@ export module Services {
       return Observable.fromPromise(get);
     }
 
-    projects(config: any, token: string) {
+    project({config, token, pathWithNamespace}) {
+      pathWithNamespace = encodeURIComponent(pathWithNamespace);
+      const get = request({
+        uri: config.host + `/api/v4/projects/${pathWithNamespace}?access_token=${token}`,
+        json: true
+      });
+      return Observable.fromPromise(get);
+    }
+
+    projects({config, token}) {
       const get = request({
         uri: config.host + `/api/v4/projects?membership=true&access_token=${token}`,
         json: true
@@ -137,15 +146,6 @@ export module Services {
         json: true
       });
       return Observable.fromPromise(post);
-    }
-
-    project(config: any, token: string, pathWithNamespace: string) {
-      pathWithNamespace = encodeURIComponent(pathWithNamespace);
-      const get = request({
-        uri: config.host + `/api/v4/projects/${pathWithNamespace}?access_token=${token}`,
-        json: true
-      });
-      return Observable.fromPromise(get);
     }
 
     updateProject(config: any, token: string, pathWithNamespace: string, project: any) {

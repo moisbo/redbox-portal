@@ -170,7 +170,7 @@ export module Controllers {
         return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
         .flatMap(response => {
           gitlab = response.info;
-          return GitlabService.projects(this.config, gitlab.accessToken.access_token)
+          return GitlabService.projects({config: this.config, token: gitlab.accessToken.access_token})
         })
         .flatMap(response => {
           let obs = [];
@@ -411,7 +411,7 @@ public project(req, res) {
     return WorkspaceService.workspaceAppFromUserId(userId, this.config.appName)
     .flatMap(response => {
       const gitlab = response.info;
-      return GitlabService.project(this.config, gitlab.accessToken.access_token, pathWithNamespace);
+      return GitlabService.project({config: this.config, token: gitlab.accessToken.access_token, projectNameSpace: pathWithNamespace});
     })
     .subscribe(response => {
       sails.log.debug('project');

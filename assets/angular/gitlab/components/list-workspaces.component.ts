@@ -47,18 +47,17 @@ export class ListWorkspaceDataField extends FieldBase<any> {
     this.syncLabel = options['syncLabel'] || 'Sync';
     var relatedObjects = this.relatedObjects;
     this.value = options['value'] || this.setEmptyValue();
-
     this.relatedObjects = [];
     this.failedObjects = [];
     this.accessDeniedObjects = [];
-
+    this.loading = true;
   }
 
   registerEvents() {
-    this.fieldMap['LoginWorkspaceApp'].field['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));    //TODO: this next line doesnt work because of when the form is being built
+//    this.fieldMap['LoginWorkspaceApp'].field['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));    //TODO: this next line doesnt work because of when the form is being built
+    this.fieldMap['CreateWorkspace'].field['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));
+    this.fieldMap['LinkModal'].field['listWorkspaces'].subscribe(this.listWorkspaces.bind(this));
     this.fieldMap['RevokeLogin'].field['revokePermissions'].subscribe(this.revoke.bind(this));
-    //let that = this;
-    //this.fieldMap._rootComp['loginMessage'].subscribe(that.displayLoginMessage);
   }
 
   init(){

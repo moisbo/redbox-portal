@@ -55,6 +55,8 @@ export class CreateWorkspaceField extends FieldBase<any> {
   recordMap: any[];
   branch: string;
 
+  @Output() listWorkspaces: EventEmitter<any> = new EventEmitter<any>();
+
   constructor(options: any, injector: any) {
     super(options, injector);
     this.gitlabService = this.getFromInjector(GitlabService);
@@ -89,8 +91,8 @@ export class CreateWorkspaceField extends FieldBase<any> {
     this.fieldMap['ListWorkspaces'].field['checkLoggedIn'].subscribe(this.checkLogin.bind(this));
   }
 
-  checkLogin(status){
-    this.loggedIn = status;
+  checkLogin(status: boolean) {
+    this.loggedIn = this.fieldMap._rootComp.loggedIn = status;
   }
 
   createFormModel(valueElem: any = undefined): any {
@@ -198,6 +200,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
             throw new Error(response.message.description);
           }
           this.creationAlert.set({message: this.workspaceCreated, status: 'done', className: 'success'});
+          this.listWorkspaces.emit();
         });
       }
     })
@@ -229,6 +232,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
             throw new Error(response.message.description);
           } else {
             this.creationAlert.set({message: this.workspaceCreated, status: 'done', className: 'danger'});
+            this.listWorkspaces.emit();
           }
         });
       }

@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, Inject, Injector} from '@angular/core';
+import { Input, Output, Component, OnInit, Inject, Injector, EventEmitter} from '@angular/core';
 import { SimpleComponent } from '../../shared/form/field-simple.component';
 import { FieldBase } from '../../shared/form/field-base';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
@@ -43,6 +43,8 @@ export class LinkModalWorkspaceField extends FieldBase<any> {
   checkBranch: string;
   checks: Checks;
   linkCreated: boolean;
+
+  @Output() listWorkspaces: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(options: any, injector: any) {
     super(options, injector);
@@ -115,6 +117,7 @@ export class LinkModalWorkspaceField extends FieldBase<any> {
           this.checks.linkCreated = true;
         }
         this.processing = false;
+        this.listWorkspaces.emit();
       })
       .catch(error => {
         this.processingStatus = 'done';

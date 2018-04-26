@@ -152,14 +152,11 @@ export class GitlabFormComponent extends LoadableComponent {
         } else {
           this.cssClasses = this.formDef.viewCssClasses;
         }
-        //TODO: here put is loggedIn
         this.loggedIn = false;
         if (form.fieldsMeta) {
           this.fields = form.fieldsMeta;
           this.rebuildForm();
           this.watchForChanges();
-          //TODO: check if this is correct. list-workspaces is ngAfterContentInit to start
-          //this.listWorkspaces.emit();
           this.registerEvents();
         }
       });

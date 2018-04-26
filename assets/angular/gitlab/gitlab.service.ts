@@ -117,11 +117,14 @@ export class GitlabService extends BaseService {
     });
   }
 
-  link({rdmp, branch, currentWorkspace, recordMap}) {
+  link({rdmp, branch, pathWithNamespace, currentWorkspace, recordMap}) {
     const wsUrl = this.brandingAndPortalUrl + '/ws/gitlab/link';
     return this.http.post(
       wsUrl,
-      {rdmpId: rdmp, branch: branch, project: currentWorkspace, recordMap: recordMap},
+      {
+        rdmpId: rdmp, branch: branch, pathWithNamespace: pathWithNamespace, 
+        project: currentWorkspace, recordMap: recordMap
+      },
       this.options
     )
     .toPromise()

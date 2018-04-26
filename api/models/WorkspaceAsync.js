@@ -29,7 +29,7 @@ module.exports = {
       type: 'string',
       required: true
     },
-    service:{
+    service: {
       type: 'string',
       required: true
     },
@@ -37,12 +37,15 @@ module.exports = {
       type: 'string',
       required: true
     },
-    args:{
+    args: {
       type: 'json',
       required: true
     },
     status: {
       type: 'string'
+    },
+    workspaceStatus: {
+      type: 'json'
     },
     message: {
       type: 'json'

@@ -24,6 +24,7 @@ export module Services {
     protected _exportedMethods: any = [
       'token',
       'user',
+      'project',
       'projects',
       'readFileFromRepo',
       'revokeToken',
@@ -98,8 +99,8 @@ export module Services {
       return Observable.fromPromise(deleteRequest);
     }
 
-    addWorkspaceInfo(config: any, token: string, branch: string, project: any, workspaceLink: string, filePath: string) {
-      const projectNameSpace = encodeURIComponent(project.path_with_namespace);
+    addWorkspaceInfo({config, token, branch, pathWithNamespace, project, workspaceLink, filePath}) {
+      const projectNameSpace = encodeURIComponent(pathWithNamespace);
       const post = request({
         uri: config.host + `/api/v4/projects/${projectNameSpace}/repository/files/${filePath}?access_token=${token}`,
         method: 'POST',

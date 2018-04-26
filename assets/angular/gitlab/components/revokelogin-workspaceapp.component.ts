@@ -99,7 +99,7 @@ export class RevokeLoginWorkspaceAppField extends FieldBase<any> {
   selector: 'ws-revokelogin',
   template: `
   <div *ngIf="field.loggedIn" class="padding-bottom-10">
-    <div class="row">
+    <div class="">
       <button type="button" class="btn btn-danger" (click)="field.revokeModal()">{{ field.revokeLabel }}</button>
     </div>
   </div>

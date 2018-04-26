@@ -93,26 +93,26 @@ export class LinkModalWorkspaceField extends FieldBase<any> {
 
   linkModal({rdmp, workspace}) {
     this.currentWorkspace = workspace;
+    this.checks.clear();
     jQuery('#linkModal').modal('show');
     this.processing = true;
     this.gitlabService.checkRepo(
       this.currentWorkspace[this.checkField], this.checkBranch
-    ).then(response =>{
+    ).then(response => {
       console.log('checkRepo');
       console.log(response);
       this.checks.master = true;
       return this.gitlabService.link({rdmp: rdmp,
-        branch: this.checkBranch, currentWorkspace:this.currentWorkspace,
+        branch: this.checkBranch, pathWithNamespace: this.currentWorkspace['path_with_namespace'],
+        currentWorkspace: this.currentWorkspace,
         recordMap: this.recordMap
       });
     }).then(response => {
-      console.log('link');
-      console.log(response);
         if(response.error && response.error.message) {
           this.processingStatus = 'done';
           this.processingFail = response.error.message;
-        } else{
-          this.linkCreated = true;
+        } else {
+          this.checks.linkCreated = true;
         }
         this.processing = false;
       })

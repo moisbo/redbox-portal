@@ -144,7 +144,7 @@ export class LoginWorkspaceAppField extends FieldBase<any> {
   selector: 'ws-login',
   template: `
   <div *ngIf="!field.loggedIn && field.isLoaded" class="padding-bottom-10">
-    <div class="row">
+    <div class="">
       <h4>{{ field.permissionStep }}</h4>
       <form #form="ngForm"  novalidate autocomplete="off">
         <div class="form-group">

@@ -24,7 +24,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
   enabledValidators: boolean;
   hasInit: boolean;
   createLabel: string;
-  cancelLabel: string;
+  dismissLabel: string;
   createWorkspaceLabel: string;
   workspaceDetailsLabel: string;
   selectSpace: string;
@@ -32,10 +32,13 @@ export class CreateWorkspaceField extends FieldBase<any> {
   addDescription: string;
   selectTemplate: string;
   nameWorkspaceValidation: string;
+  nameHasSpacesValidation: string;
   descriptionWorkspaceValidation: string;
   workspaceCreated: string;
+  linkingWorkspace: string;
   creatingWorkspace: string;
 
+  validations: any[];
   loadingModal: boolean;
 
   checks: Checks;
@@ -59,8 +62,9 @@ export class CreateWorkspaceField extends FieldBase<any> {
     this.currentWorkspace = new CurrentWorkspace();
     this.workspaceUser = new WorkspaceUser();
     this.creation = new Creation();
+    this.creationAlert = new CreationAlert();
     this.createLabel = options['createLabel'] || '';
-    this.cancelLabel = options['cancelLabel'] || '';
+    this.dismissLabel = options['dismissLabel'] || '';
     this.createWorkspaceLabel = options['createWorkspaceLabel'] || '';
     this.workspaceDetailsLabel = options['workspaceDetailsLabel'] || '';
     this.selectSpace = options['selectSpace'] || '';
@@ -70,8 +74,10 @@ export class CreateWorkspaceField extends FieldBase<any> {
     this.recordMap = options['recordMap'] || [];
     this.branch = options['branch'] || '';
     this.nameWorkspaceValidation = options['nameWorkspaceValidation'] || '';
+    this.nameHasSpacesValidation = options['nameHasSpacesValidation'] || '';
     this.descriptionWorkspaceValidation = options['descriptionWorkspaceValidation'] || '';
     this.workspaceCreated = options['workspaceCreated'] || '';
+    this.linkingWorkspace = options['linkingWorkspace'] || '';
     this.creatingWorkspace = options['creatingWorkspace'] || '';
   }
 
@@ -128,6 +134,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
       this.groups = this.groups.concat(response);
       return this.gitlabService.templates();
     }).then(response => {
+      console.log(response);
       this.templates = this.templates.concat(response);
       this.loadingModal = false;
     })
@@ -138,40 +145,36 @@ export class CreateWorkspaceField extends FieldBase<any> {
   }
 
   create() {
-    if(this.validateWorkspace()){
-      this.creationAlert.message = this.creatingWorkspace;
-      this.creationAlert.creationAlert = 'info';
-      if(this.creation.template.pathWithNamespace){
+    this.validations = this.validateWorkspace();
+    this.creationAlert.clear();
+    if(this.validations.length <= 0) {
+      if(this.creation.template.pathWithNamespace) {
         this.createWithTemplate();
-      }else {
+      } else {
         this.createWorkspace();
       }
-    }else {
-      this.creationAlert.message = this.creation.validateMessage;
-      this.creationAlert.class = 'danger';
     }
   }
 
   validateWorkspace() {
+    const validateWorkspace = [];
     if(!this.creation.name) {
-      this.creation.validateMessage = this.nameWorkspaceValidation;
-      this.creationAlert.class = 'danger';
-      return false;
+      validateWorkspace.push({message: this.nameWorkspaceValidation});
+    }
+    if(this.creation.nameHasSpaces()) {
+      validateWorkspace.push({message: this.nameHasSpacesValidation});
     }
     if(!this.creation.description) {
-      this.creation.validateMessage = this.descriptionWorkspaceValidation;
-      this.creationAlert.class = 'danger';
-      return false;
+      validateWorkspace.push({message: this.descriptionWorkspaceValidation});
     }
-    this.creationAlert.message = undefined;
-    this.creationAlert.class = undefined;
-    return true;
+    return validateWorkspace;
   }
 
   createWorkspace() {
+    this.creationAlert.set({message: this.creatingWorkspace, status: 'working', className: 'warning'});
     this.gitlabService.createWorkspace(this.creation)
     .then(response => {
-      if(response.status == false){
+      if(!response.status) {
         //TODO: improve this assignment in case of error.
         const name = response.message.error.error.message.name || '';
         throw new Error('Name ' + _.first(name));
@@ -179,27 +182,27 @@ export class CreateWorkspaceField extends FieldBase<any> {
         return this.checkCreation();
       }
     }).then(response => {
-      if(response.status == false){
+      if(!response.status) {
         //TODO: improve this assignment in case of error.
         const name = response.message.error.error.message.name || '';
         throw new Error(_.first(name));
       } else {
-        this.creationAlert.message = 'Linking workspace';
-        this.creationAlert.class = 'warning';
+        this.creationAlert.set({message: this.linkingWorkspace, status: 'working', className: 'warning'});
         this.creation.namespace = this.creation.group.path;
-        return this.gitlabService.link({rdmp: this.rdmp, branch: this.branch, currentWorkspace: this.creation, recordMap: this.recordMap})
+        this.creation.id = response.id;
+        return this.gitlabService.link({rdmp: this.rdmp, branch: this.branch,
+          pathWithNamespace: `${this.creation.namespace}/${this.creation.name}`,
+          currentWorkspace: this.creation, recordMap: this.recordMap})
         .then(response => {
-          if(response.status == false){
+          if(!response.status) {
             throw new Error(response.message.description);
           }
-          this.creationAlert.message = this.workspaceCreated;
-          this.creationAlert.class = 'success';
+          this.creationAlert.set({message: this.workspaceCreated, status: 'done', className: 'success'});
         });
       }
     })
     .catch(error => {
-      this.creationAlert.class = 'danger';
-      this.creationAlert.message = error;
+      this.creationAlert.set({message: error, status: 'error', className: 'danger'});
     });
   }
 
@@ -209,21 +212,24 @@ export class CreateWorkspaceField extends FieldBase<any> {
       return this.gitlabService.updateProject(this.creation);
     })
     .then(response => {
-      if(response.status == false){
+      if(!response.status){
         //TODO: improve this assignment in case of error.
         const name = response.message.error.error.message.name || '';
         throw new Error(_.first(name));
       } else {
-        this.creationAlert.message = 'Linking workspace';
-        this.creationAlert.class = 'warning';
+        this.creationAlert.set({message: this.linkingWorkspace, status: 'working', className: 'warning'});
         this.creation.namespace = this.creation.group.path;
-        return this.gitlabService.link({rdmp:this.rdmp, branch: this.branch, currentWorkspace: this.creation, recordMap: this.recordMap})
+        return this.gitlabService.link({
+          rdmp: this.rdmp, branch: this.branch,
+          pathWithNamespace: `${this.creation.namespace}/${this.creation.name}`,
+          currentWorkspace: this.creation, recordMap: this.recordMap
+        })
         .then(response => {
-          if(response.status == false){
+          if(!response.status){
             throw new Error(response.message.description);
+          } else {
+            this.creationAlert.set({message: this.workspaceCreated, status: 'done', className: 'danger'});
           }
-          this.creationAlert.message = this.workspaceCreated;
-          this.creationAlert.class = 'success';
         });
       }
     })
@@ -231,8 +237,7 @@ export class CreateWorkspaceField extends FieldBase<any> {
       console.log(response);
     })
     .catch(error => {
-      this.creationAlert.class = 'danger';
-      this.creationAlert.message = error;
+      this.creationAlert.set({message: error, status: 'done', className: 'danger'});
     });
   }
 
@@ -241,11 +246,6 @@ export class CreateWorkspaceField extends FieldBase<any> {
     pathWithNamespace = this.creation.group.path + '/' + this.creation.name;
     return this.gitlabService.project(pathWithNamespace);
   }
-
-  checkName() {
-    //TODO: check workspace name if it is available
-  }
-
 
 }
 

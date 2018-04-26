@@ -5,8 +5,7 @@ module.exports.workspace = {
   routes: {
     'get /:branding/:portal/ws/gitlab/user': 'typescript/GitlabController.user',
     'post /:branding/:portal/ws/gitlab/token': 'typescript/GitlabController.token',
-    'get /:branding/:portal/ws/gitlab/revokeToken': 'typescript/GitlabController.revokeToken',    
-    'get /:branding/:portal/ws/gitlab/projects': 'typescript/GitlabController.projects',
+    'get /:branding/:portal/ws/gitlab/revokeToken': 'typescript/GitlabController.revokeToken',
     'get /:branding/:portal/ws/gitlab/projectsRelatedRecord': 'typescript/GitlabController.projectsRelatedRecord',
     'post /:branding/:portal/ws/gitlab/link': 'typescript/GitlabController.link',
     'post /:branding/:portal/ws/gitlab/checkRepo': 'typescript/GitlabController.checkRepo',

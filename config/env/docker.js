@@ -69,6 +69,34 @@ module.exports = {
       }
     }
   },
+  workspaces: {
+    portal:{
+      authorization: 'Bearer 123123'
+    },
+    provisionerUser: 'admin',
+    parentRecord: 'rdmp',
+    gitlab: {
+      parentRecord: 'rdmp',
+      formName: 'gitlab-1.0-draft',
+      workflowStage: 'draft',
+      appName: 'gitlab',
+      appId: 'git-test',
+      recordType: 'gitlab',
+      host: 'https://git-test.research.uts.edu.au'
+    },
+    omero: {
+      parentRecord: 'rdmp',
+      formName: 'omero-1.0-draft',
+      workflowStage: 'draft',
+      appName: 'omero',
+      appId: 'omero-test',
+      recordType: 'omero',
+      host: 'https://omero-dev.research.uts.edu.au',
+      domain: 'omero-dev.research.uts.edu.au',
+      serverId: '1',
+      defaultGroupId: 1
+    }
+  },
   datastores:{
   mongodb: {
     adapter: require('sails-mongo'),

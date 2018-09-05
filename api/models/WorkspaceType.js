@@ -17,10 +17,6 @@ module.exports = {
       model: 'brandingconfig',
       required: true
     },
-    //TODO: It should be added to the GridFS
-    //https://sailsjs.com/documentation/concepts/file-uploads/uploading-to-grid-fs
-    //It cannot be added with skipper-gridfs because that uses `req` so it just
-    //extends the body parser, needs to be done manually if it is at bootstrap.
     logo: {
       type: 'string'
     },
@@ -29,6 +25,9 @@ module.exports = {
     },
     description: {
       type: 'string'
+    },
+    action: {
+      type: 'json'
     }
   }
 }

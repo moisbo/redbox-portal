@@ -10,6 +10,7 @@
             <th>{{ linkColLlabel }}</th>
             <th>{{ rdmpColLabel }}</th>
             <th>{{ typeColLabel }}</th>
+            <th>&nbsp;</th>
           </tr>
         </thead>
         <tbody *ngFor="let plan of records.items">
@@ -21,6 +22,7 @@
                 <td><a target="_blank" rel="noopener noreferrer" href="{{ plan.metadata.metadata.location }}">{{ plan.metadata.metadata.location }}</a></td>
                 <td><a href="/{{ branding }}/{{ portal }}/record/view/{{ plan.metadata.metadata.rdmpOid }}">{{ plan.metadata.metadata.rdmpTitle }}</a></td>
                 <td>{{ plan.metadata.metadata.type }}</td>
+                <td><a *ngIf="plan.hasEditAccess && hasActions(plan.metadata.metadata.type)" href="/{{ branding }}/{{ portal }}/record/{{ plan.metadata.metadata.type }}/edit?rdmp={{ plan.metadata.metadata.rdmpOid }}&oid={{ plan.oid }}&action={{ getDefaultAction(plan.metadata.metadata.type) }}" [attr.aria-label]="'edit-link-label' | translate"><i class="fa fa-pencil" aria-hidden="true"></i></a></td>
             </tr>
         </tbody>
       </table>

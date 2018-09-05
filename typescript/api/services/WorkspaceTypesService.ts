@@ -69,6 +69,7 @@ export module Services {
           label: workspaceType['label'],
           branding: brand.id,
           subtitle: workspaceType['subtitle'],
+          action: workspaceType['action'],
           description: workspaceType['description'],
           logo: workspaceType['logo']
         })

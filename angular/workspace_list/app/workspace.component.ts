@@ -11,6 +11,7 @@ import { PaginationModule, TooltipModule} from 'ngx-bootstrap';
 import { TranslationService } from './shared/translation-service';
 import { RecordsService } from './shared/form/records.service';
 import { RelatedObjectSelectorField } from './shared/form/field-relatedobjectselector.component';
+import { WorkspaceTypeService } from './shared/workspace-service';
 
 declare var pageData: any;
 declare var jQuery: any;
@@ -41,9 +42,10 @@ export class WorkspaceListComponent extends LoadableComponent implements OnInit 
   selectedRdmpUrl: string;
   nextButtonLabel: string;
   backButtonLabel: string;
+  workspaceTypes: any [];
 
   constructor( @Inject(DashboardService) protected dashboardService: DashboardService,  protected recordsService: RecordsService, @Inject(DOCUMENT) protected document: any, protected elementRef: ElementRef, public translationService:TranslationService,
-protected app: ApplicationRef ) {
+protected app: ApplicationRef, @Inject(WorkspaceTypeService) protected  workspaceTypeService: WorkspaceTypeService) {
     super();
     this.setLoading(true);
     this.initTranslator(this.translationService);
@@ -64,12 +66,13 @@ protected app: ApplicationRef ) {
         this.createWorkspaceLabel = this.getTranslated('create-workspace', "Create Workspace");
         this.nextButtonLabel = this.getTranslated('create-workspace-next', "Next");
         this.backButtonLabel = this.getTranslated('create-workspace-back', "Back");
-        this.dashboardService.getRecords(null,null,1,this.packageType).then((stagedRecords: PlanTable) => {
-          this.setDashboardTitle(stagedRecords);
-          this.records = stagedRecords;
-          this.checkIfHasLoaded();
-        });
-
+        this.getWorkspaceTypes().then(() => {
+          this.dashboardService.getRecords(null, null, 1, this.packageType).then((stagedRecords: PlanTable) => {
+            this.setDashboardTitle(stagedRecords);
+            this.records = stagedRecords;
+            this.checkIfHasLoaded();
+          });
+        })
       });
     });
   }
@@ -140,6 +143,33 @@ protected app: ApplicationRef ) {
 
   hasSelectedRdmp() {
     return !_.isEmpty(this.selectedRdmpUrl) && !_.isUndefined(this.selectedRdmpUrl);
+  }
+
+  getWorkspaceTypes() {
+    return this.workspaceTypeService.getWorkspaceTypes().then(response => {
+      if(response['status']) {
+        //append results from database into workspaceApps
+        this.workspaceTypes = response['workspaceTypes'];
+      } else {
+        throw new Error('cannot get workspaces types');
+      }
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+
+  hasActions(displayedType: string) {
+    const wT = this.workspaceTypes.find((workspaceType) => {
+      return workspaceType['name'] === displayedType;
+    });
+    return wT.hasOwnProperty('action') && wT['action'] && wT['action']['default'] != undefined;
+  }
+
+  getDefaultAction(displayedType: string) {
+    const wT = this.workspaceTypes.find((workspaceType) => {
+      return workspaceType['name'] === displayedType;
+    });
+    return wT['action']['default'] || false;
   }
 
 }

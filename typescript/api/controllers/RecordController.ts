@@ -154,9 +154,12 @@ export module Controllers {
     protected updateResponsibility(transferConfig, role, record, updateData) {
       const respConfig = transferConfig.fields[role];
       if (respConfig.updateField) {
-        _.forOwn(updateData, (val, key) => {
-          _.set(record, `metadata.${respConfig.updateField}.${key}`, val);
-        });
+        // overwrite the whole field instead of 'merging'...
+        _.set(record, `metadata.${respConfig.updateField}`, updateData);
+        // 'merge' code commented out:
+        // _.forOwn(updateData, (val, key) => {
+        //   _.set(record, `metadata.${respConfig.updateField}.${key}`, val);
+        // });
       }
       if (respConfig.fieldNames) {
         _.forOwn(respConfig.fieldNames, (val, key) => {
@@ -402,6 +405,7 @@ export module Controllers {
           wfStepObs = WorkflowStepsService.get(recType, targetStep);
         }
         wfStepObs.subscribe(wfStep => {
+            this.updateWorkflowStep(record, wfStep);
             let obs = this.triggerPreSaveTriggers(null, record, recordType, "onCreate");
             obs.then(record => {
               return this.createRecord(record, wfStep, brand, packageType, recordType, req, res);
@@ -413,7 +417,6 @@ export module Controllers {
     }
 
     private createRecord(record, wfStep, brand, packageType, recordType, req, res) {
-      this.updateWorkflowStep(record, wfStep);
       RecordsService.create(brand, record, packageType).subscribe(response => {
         if (response && response.code == "200") {
           response.success = true;

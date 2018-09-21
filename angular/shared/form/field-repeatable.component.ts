@@ -42,6 +42,7 @@ export class RepeatableContainer extends Container {
   removeButtonClass: any;
   moveUpButtonClass: any;
   moveDownButtonClass: any;
+  delegateErrorHandling: boolean;
 
   constructor(options: any, injector: any) {
     super(options, injector);
@@ -56,6 +57,7 @@ export class RepeatableContainer extends Container {
     this.removeButtonClass = options['removeButtonClass'] || 'fa fa-minus-circle btn text-20 pull-right btn-danger';
     this.moveUpButtonClass = options['addButtonClass'] || 'fa fa-chevron-circle-up btn text-20 pull-left btn-primary';
     this.moveDownButtonClass = options['addButtonClass'] || 'fa fa-chevron-circle-down btn text-20 pull-left btn-primary';
+    this.delegateErrorHandling = !_.isUndefined(options['delegateErrorHandling']) ? options['delegateErrorHandling'] : true;
   }
 
   getInitArrayEntry() {
@@ -198,6 +200,22 @@ export class RepeatableContainer extends Container {
       }
     });
   }
+
+  public removeAllElems() {
+    _.each(this.fields, (f, idx) => {
+      this.removeElem(idx);
+    });
+  }
+
+  public reset(data=null, eventConfig=null) {
+    this.fields[0].setValue(null);
+    if (this.fields.length > 1) {
+      for (var i=1; i<this.fields.length; i++) {
+        this.removeElem(i);
+      }
+    }
+    return data;
+  } 
 }
 
 export class EmbeddableComponent extends SimpleComponent {
@@ -229,6 +247,17 @@ export class RepeatableComponent extends SimpleComponent {
 
   removeElem(event: any, i: number) {
     this.field.removeElem(i);
+  }
+
+  hasRequiredError() {
+    let hasError = false;
+    _.each(this.field.formModel.controls, (c) => {
+      if (c.hasError('required')) {
+        hasError = true;
+        return false;
+      }
+    });
+    return hasError;
   }
 }
 
@@ -314,6 +343,17 @@ export class RepeatableContributor extends RepeatableContainer {
   selector: 'repeatable-contributor',
   template: `
   <div *ngIf="field.editMode">
+    <div class="row" *ngIf="field.fields[0].label">
+      <div class="col-xs-12">
+        <span class="label-font">
+          {{field.fields[0].label}} {{getRequiredLabelStr()}}
+          <button type="button" class="btn btn-default" *ngIf="field.fields[0].help" (click)="toggleHelp()" [attr.aria-label]="'help' | translate "><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></button>
+        </span>
+      </div>
+    </div>
+    <div class="row"  *ngIf="this.helpShow">
+      <span id="{{ 'helpBlock_' + field.name }}" class="col-xs-12 help-block" [innerHtml]="field.fields[0].help"></span>
+    </div>
     <div *ngFor="let fieldElem of field.fields; let i = index;" class="row">
       <span class="col-xs-10">
         <rb-contributor [field]="fieldElem" [form]="form" [fieldMap]="fieldMap" [isEmbedded]="true"></rb-contributor>
@@ -357,6 +397,7 @@ export class RepeatableContributorComponent extends RepeatableComponent implemen
   field: RepeatableContributor;
 
   ngOnInit() {
+    this.field.fields[0]['showHeader'] = false;
     this.field.fields[0].marginTop = this.field.fields[0].baseMarginTop;
     this.field.fields[0].componentReactors.push(this);
   }
@@ -366,6 +407,7 @@ export class RepeatableContributorComponent extends RepeatableComponent implemen
     newElem.marginTop = '0px';
     newElem.vocabField.initialValue = null;
     newElem.setupEventHandlers();
+    newElem.showHeader = false;
     newElem.componentReactors.push(this);
   }
 
@@ -373,7 +415,6 @@ export class RepeatableContributorComponent extends RepeatableComponent implemen
     this.field.removeElem(i);
     if (i == 0) {
       this.field.fields[0].marginTop = this.field.fields[0].baseMarginTop;
-      this.field.fields[0]["showHeader"] = true;
     }
   }
 
@@ -391,9 +432,7 @@ export class RepeatableContributorComponent extends RepeatableComponent implemen
     if (newIdx >= 0) {
       this.field.swap(i, newIdx);
       if (newIdx == 0) {
-        this.field.fields[i].showHeader = false;
         this.field.fields[i].marginTop = '';
-        this.field.fields[newIdx].showHeader = true;
         this.field.fields[newIdx].marginTop = this.field.fields[newIdx].baseMarginTop;
       }
     }
@@ -404,9 +443,7 @@ export class RepeatableContributorComponent extends RepeatableComponent implemen
     if (newIdx < this.field.fields.length) {
       this.field.swap(i, newIdx);
       if (i == 0) {
-        this.field.fields[i].showHeader = true;
         this.field.fields[i].marginTop = this.field.fields[i].baseMarginTop;
-        this.field.fields[newIdx].showHeader = false;
         this.field.fields[newIdx].marginTop = '';
       }
     }

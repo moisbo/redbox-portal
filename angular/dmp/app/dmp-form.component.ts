@@ -21,9 +21,11 @@ import { Component, Inject, Input, ElementRef, EventEmitter, Output, ChangeDetec
 import { Location, LocationStrategy, PathLocationStrategy } from '@angular/common';
 import { FormGroup } from '@angular/forms';
 import { RecordsService } from './shared/form/records.service';
+import { UserSimpleService } from './shared/user.service-simple';
 import { LoadableComponent } from './shared/loadable.component';
 import { FieldControlService } from './shared/form/field-control.service';
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/zip';
 import * as _ from "lodash";
 import { TranslationService } from './shared/translation-service';
 
@@ -58,6 +60,9 @@ export class DmpFormComponent extends LoadableComponent {
    *
    */
   @Input() recordType: string;
+
+  user:any = {};
+
   /**
    * Fields for the form
    */
@@ -127,6 +132,7 @@ export class DmpFormComponent extends LoadableComponent {
   constructor(
     elm: ElementRef,
     @Inject(RecordsService) protected RecordsService: RecordsService,
+    @Inject(UserSimpleService) protected UserSimpleService: UserSimpleService,
     @Inject(FieldControlService) protected fcs: FieldControlService,
     @Inject(Location) protected LocationService: Location,
     public translationService: TranslationService,
@@ -158,8 +164,28 @@ export class DmpFormComponent extends LoadableComponent {
             if (form.fieldsMeta) {
               this.fields = form.fieldsMeta;
               this.rebuildForm();
-              this.watchForChanges();
+              let asyncLoadObservables = []
+              for( var key in this.fieldMap) {
+                if(this.fieldMap[key]['field']) {
+                  asyncLoadObservables.push(this.fieldMap[key]['field'].asyncLoadData());
+                }
+              }
+              Observable.zip(...asyncLoadObservables).subscribe( result => {
+                this.watchForChanges();
+              });
             }
+          });
+
+
+          UserSimpleService.getInfo().then(userInfo => {
+            let user = _.clone(userInfo);
+            //TODO: This roles transform ignores branding making
+            user.roles = [];
+            _.each(userInfo.roles, (roleDetails:any) => {
+              user.roles.push(roleDetails['name']);
+            });
+
+            this.user = user;
           });
         }).catch((err:any) => {
           console.log("Error loading form...");

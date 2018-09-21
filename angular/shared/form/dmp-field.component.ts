@@ -22,6 +22,7 @@ import { FormGroup } from '@angular/forms';
 import { FieldBase } from './field-base';
 import { SimpleComponent } from './field-simple.component';
 import * as _ from "lodash";
+import moment from 'moment-es6';
 declare var jQuery: any;
 declare var $: any;
 /**
@@ -108,6 +109,7 @@ export class DmpFieldComponent {
       _.forOwn(this.fieldMap._rootComp, (val, key) => {
         variables.imports[key] = val;
       });
+      variables.imports['moment'] = moment;
       var compiled = _.template(disabledExpression, variables);
       var parentElement = jQuery(this.fieldElement.nativeElement.parentElement);
       if(compiled() == "true") {
@@ -115,7 +117,10 @@ export class DmpFieldComponent {
           //take note of which elements where already disabled as we dont want to enable them if whole component becomes enabled again
           this.disabledElements = parentElement.find('*:disabled');
           parentElement.find('input').prop( "disabled", true );
-          parentElement.find('button').prop( "disabled", true );
+          parentElement.find('button').filter((index, buttonElem) => {
+            const isHelp = jQuery(buttonElem).find("span[class='glyphicon glyphicon-question-sign']");
+            return isHelp.length <= 0;
+          }).prop( "disabled", true );
           parentElement.find('textarea').prop( "disabled", true );
           parentElement.find('select').prop( "disabled", true );
           this.disabled = true;

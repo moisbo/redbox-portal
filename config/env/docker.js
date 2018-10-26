@@ -31,14 +31,14 @@ module.exports = {
   record:{
     baseUrl: {
       redbox: "http://redbox:9000/redbox",
-      mint: "http://203.101.226.160/mint"
+      mint: "https://dev-redbox.research.uts.edu.au/mint"
     }
   },
   redbox: {
     apiKey: 'c8e844fc-8550-497f-b970-7900ec8741ca'
   },
   mint: {
-    apiKey: '3a86f185-8305-478a-a3dc-9e8481d49712',
+    apiKey: '123123',
     api: {
       search: {
         method: 'get',

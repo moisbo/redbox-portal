@@ -35,7 +35,6 @@ module.exports = [
             }
           }
         },
-
         {
           class: 'Container',
           compClass: 'TextBlockComponent',
@@ -48,8 +47,9 @@ module.exports = [
           class: 'RelatedObjectSelector',
           compClass: 'RelatedObjectSelectorComponent',
           definition: {
-            label: 'Data record related to this publication',
+            label: 'Data Record related to this publication (if you dont have one, first go to Manage > Create archival Data Record)',
             name: 'dataRecord',
+            help: '@dataPublication-chooseDR-help',
             recordType: 'dataRecord',
             required: true,
             subscribe: {
@@ -62,14 +62,15 @@ module.exports = [
           }
         }
       },
-        {
-          class: 'TextField',
+/*        {
+          class: 'HiddenValue',
+          compClass: 'HiddenValueComponent',
           definition: {
             name: 'title',
             label: '@dataPublication-title',
             help: '@dataPublication-title-help',
             type: 'text',
-            required: true,
+//            required: true,
             disabledExpression: '<%= _.isEmpty(relatedRecordId) %>',
             subscribe: {
               'dataRecordGetter': {
@@ -81,6 +82,7 @@ module.exports = [
             }
           }
         },
+*/
         {
           class: 'MarkdownTextArea',
           compClass: 'MarkdownTextAreaComponent',
@@ -133,6 +135,10 @@ module.exports = [
               {
                 value: "repository",
                 label: "@dataPublication-dataype-select:repository"
+              },
+              {
+                value: "software",
+                label: "@dataPublication-dataype-select:software"
               }
             ],
             subscribe: {

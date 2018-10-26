@@ -19,63 +19,23 @@ module.exports = [
         {
           class: 'TextField',
           definition: {
-            name: 'citation_doi',
-            label: '@dataPublication-citation-identifier',
-            type: 'text',
-            readOnly:true,
-            subscribe: {
-              'form': {
-                onFormLoaded: [
-                  { action: 'publishValueLoaded' }
-                ]
-              },
-              'this': {
-                onValueLoaded: [
-                  { action: 'setVisibility' }
-                ]
-              }
-            },
-            visibilityCriteria: {
-              type: 'function',
-              action: 'utilityService.hasValue'
-            }
-          }
-        },
-        {
-          class: 'SelectionField',
-          compClass: 'SelectionFieldComponent',
-          editOnly: true,
-          disabledExpression: '<%= _.isEmpty(relatedRecordId) %>',
-          definition: {
-            name: 'requestIdentifier',
-            controlType: 'checkbox',
-            options: [
-              {
-                value: "request",
-                label: "@dataPublication-citation-request-identifier"
-              }
-            ],
-            visibilityCriteria: undefined, // when doi is undefined, this is visible
-            subscribe: {
-              'citation_doi': {
-                onValueLoaded: [
-                  { action: 'setVisibility' }
-                ]
-              }
-            }
-          }
-        },
-        {
-          class: 'TextField',
-          definition: {
-            name: 'citation_title',
+            name: 'title',
             label: '@dataPublication-citation-title',
             help: '@dataPublication-citation-title-help',
             type: 'text',
             required: true,
-            disabledExpression: '<%= _.isEmpty(relatedRecordId) %>'
+            disabledExpression: '<%= _.isEmpty(relatedRecordId) %>',
+            subscribe: {
+              'dataRecordGetter': {
+                onValueUpdate: [{
+                  action: 'utilityService.getPropertyFromObject',
+                  field: 'title'
+                }]
+              }
+            }
           }
         },
+// remember that we disposed of citation-title
         {
           class: 'RepeatableContributor',
           compClass: 'RepeatableContributorComponent',
@@ -133,13 +93,12 @@ module.exports = [
           }
         },
         {
-          class: 'LinkValueComponent',
+          class: 'TextField',
           definition: {
             name: 'citation_url',
             label: '@dataPublication-citation-url',
             help: '@dataPublication-citation-url-help',
             type: 'text',
-            readOnly: true,
             disabledExpression: '<%= _.isEmpty(relatedRecordId) %>'
           }
         },
@@ -164,10 +123,10 @@ module.exports = [
         {
           class: 'TextField',
           definition: {
-            name: 'citation_generated',
-            label: '@dataPublication-citation-generated-label',
+            name: 'citation_doi',
+            label: '@dataPublication-citation-identifier',
             type: 'text',
-            readOnly: true,
+            readOnly:true,
             subscribe: {
               'form': {
                 onValueChange: [

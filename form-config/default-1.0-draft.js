@@ -199,7 +199,9 @@ module.exports = {
                             action: 'utilityService.splitArrayStringsToArray',
                             field: 'keyword',
                             regex: ',|;',
-                            flags: 'i'
+                            flags: 'i',
+                            regexTrail: '(^,)|(,$)',
+                            flagsTrail: 'i'
                           }
                         ]
                       }

@@ -107,7 +107,7 @@ module.exports = {
                     disabledExpression: '<%= !_.isEmpty(oid) && (_.indexOf(user.roles, \'Admin\') == -1) %>',
                     vocabId: '\"Research Activities\"%20AND%20(text_status:(%22Completed%22%20OR%20%22Approved%22%20OR%20%22Closed%20Off%22%20OR%20%22Combined%22%20OR%20%22Transferred%22))',
                     sourceType: 'mint',
-                    fieldNames: ['dc_title', 'folio', 'description', 'summary', 'refId', 'keyword', 'startDate', 'endDate', 'organization', 'fundingSource', 'rmId'],
+                    fieldNames: ['dc_title', 'folio', 'description', 'summary', 'refId', 'keyword', 'startDate', 'endDate', 'faculty', 'fundingSource', 'rmId'],
                     searchFields: 'autocomplete_title',
                     titleFieldArr: ['dc_title'],
                     stringLabelToField: 'dc_title',
@@ -351,6 +351,83 @@ module.exports = {
                     help: "@dmpt-project-anzsrcSeo-help",
                     name: "dc:subject_anzsrc:seo",
                     vocabId: 'anzsrc-seo'
+                  }
+                },
+                {
+                  class: 'SelectionField',
+                  compClass: 'DropdownFieldComponent',
+                  definition: {
+                    name: 'faculty',
+                    label: '@dmpt-faculty',
+                    help: '@dmpt-faculty-help',
+                    options: [{
+                        value: "",
+                        label: "@dmpt-select:Empty"
+                      },
+                      {
+                        value: "business",
+                        label: "@dmpt-faculty-business"
+                      },
+                      {
+                        value: "dab",
+                        label: "@dmpt-faculty-dab"
+                      },
+                      {
+                        value: "dvcr",
+                        label: "@dmpt-faculty-dvcr"
+                      },
+                      {
+                        value: "fass",
+                        label: "@dmpt-faculty-fass"
+                      },
+                      {
+                        value: "feit",
+                        label: "@dmpt-faculty-feit"
+                      },
+                      {
+                        value: "healt",
+                        label: "@dmpt-faculty-healt"
+                      },
+                      {
+                        value: "law",
+                        label: "@dmpt-faculty-law"
+                      },
+                      {
+                        value: "science",
+                        label: "@dmpt-faculty-science"
+                      },
+                      {
+                        value: "other",
+                        label: "@dmpt-faculty-other"
+                      }
+                    ],
+                    required: true,
+                    validationMessages: {
+                      required: "@dmpt-faculty-required"
+                    }
+                  },
+                  subscribe: {
+                    title: {
+                      onItemSelect: [{
+                          action: 'reset'
+                        },
+                        {
+                          action: 'utilityService.getPropertyFromObjectMapping',
+                          field: 'faculty',
+                          default: 'other',
+                          mapping: [
+                            { key: 'Business', value: 'business' },
+                            { key: 'Design, Architecture and Building', value: 'dab' },
+                            { key: 'DVC (Research)', value: 'dvcr' },
+                            { key: 'Faculty of Arts and Social Sciences', value: 'fass' },
+                            { key: 'Faculty of Engineering & Information Technology', value: 'feit' },
+                            { key: 'Faculty of Health', value: 'healt' },
+                            { key: 'Law', value: 'law' },
+                            { key: 'Science', value: 'science' }
+                          ]
+                        }
+                      ]
+                    }
                   }
                 }
               ]

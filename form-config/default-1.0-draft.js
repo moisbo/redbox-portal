@@ -355,7 +355,9 @@ module.exports = {
                 },
                 {
                   class: 'SelectionField',
-                  compClass: 'DropdownFieldComponent',
+                  compClass: 'SelectionFieldComponent',
+                  controlType: 'radio',
+                  defaultValue: 'other',
                   definition: {
                     name: 'faculty',
                     label: '@dmpt-faculty',

@@ -28,6 +28,7 @@ import moment from 'moment-es6';
 declare var sails: Sails;
 declare var RecordType: Model;
 declare var _this;
+declare var _;
 declare var User;
 declare var RecordsService;
 declare var UsersService;
@@ -95,7 +96,7 @@ export module Services {
 
     }
 
-    public createPDF(oid, record, options) {
+    public createPDF(oid, record, options, user) {
       sails.log.error("Creating PDF");
 
       if (!sails.pdfService || !sails.pdfService.browser) {

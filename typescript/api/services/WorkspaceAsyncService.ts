@@ -6,8 +6,9 @@ const util = require('util');
 const moment = require('moment');
 
 declare var sails: Sails;
-declare var WorkspaceAsync: Model;
 declare var _this;
+declare var _;
+declare var WorkspaceAsync;
 
 export module Services {
   /**

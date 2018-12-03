@@ -12,7 +12,7 @@ declare var WorkspaceAsyncService;
 /**
  * Package that contains all Controllers.
  */
-import controller = require('../core/CoreController.js'); 
+import controller = require('../core/CoreController.js');
 
 export module Controllers {
   /**
@@ -27,7 +27,8 @@ export module Controllers {
      */
     protected _exportedMethods: any = [
       'start',
-      'loop'
+      'loop',
+      'status'
     ];
 
     start(req, res){
@@ -36,13 +37,25 @@ export module Controllers {
       const username = req.username;
       const method = req.param('method');
       const args = req.param('args');
-      WorkspaceAsyncService.start({name, recordType, username, method, args})
+      return WorkspaceAsyncService.start({name, recordType, username, method, args})
       .subscribe(response => {
         this.ajaxOk(req, res, null, {});
       }, error => {
         sails.log.error(error);
         this.ajaxFail(req, res, 'Error registering async workspace', error);
       });
+    }
+
+    status(req, res) {
+      const status = req.param('status');
+      const recordType = req.param('recordType');
+      return WorkspaceAsyncService.status({status, recordType})
+      .subscribe(response => {
+        this.ajaxOk(req, res, null, response);
+      }, error => {
+        sails.log.error(error);
+        this.ajaxFail(req, res, 'Error checking status async workspace', error);
+      })
     }
 
   }

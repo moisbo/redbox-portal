@@ -1,14 +1,13 @@
 import { Observable } from 'rxjs/Rx';
 import services = require('../core/CoreService.js');
 import { Sails, Model } from "sails";
-import * as request from "request-promise";
+
 const util = require('util');
 const moment = require('moment');
 
-declare var RecordsService, BrandingService;
 declare var sails: Sails;
-declare var _this;
 declare var WorkspaceAsync: Model;
+declare var _this;
 
 export module Services {
   /**
@@ -16,13 +15,14 @@ export module Services {
    *
    * @author <a target='_' href='https://github.com/moisbo'>moisbo</a>
    */
-  export class WorkspaceAsync extends services.Services.Core.Service {
+  export class WorkspaceAsyncService extends services.Services.Core.Service {
 
     protected _exportedMethods: any = [
       'start',
       'update',
       'pending',
-      'loop'
+      'loop',
+      'status'
     ];
 
     /*
@@ -41,7 +41,7 @@ export module Services {
       return super.getObservable(
         WorkspaceAsync.create(
           {name: name, started_by: username, recordType: recordType,
-            method: method, args: args, status: 'started'}
+            service: service, method: method, args: args, status: 'started'}
         )
       );
     }
@@ -67,9 +67,7 @@ export module Services {
       this.pending().subscribe(pending => {
         _.forEach(pending, wa => {
           const args = wa.args || null;
-          //No type safe here, sorry
-          //Relies on destructuring to load all arguments
-          sails.services[wa.service][wa.method]({args}).subscribe(message => {
+          sails.services[wa.service][wa.method](args).subscribe(message => {
             this.update(wa.id, {status: 'finished', message: message}).subscribe();
           }, error => {
             this.update(wa.id, {status: 'error', message: error}).subscribe();
@@ -80,7 +78,13 @@ export module Services {
       });
     }
 
+    status(status, recordType) {
+      return super.getObservable(
+        WorkspaceAsync.find({status: status, recordType: recordType})
+      )
+    }
+
   }
 
 }
-module.exports = new Services.WorkspaceAsync().exports();
+module.exports = new Services.WorkspaceAsyncService().exports();

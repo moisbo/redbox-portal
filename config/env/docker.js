@@ -27,8 +27,8 @@ module.exports = {
   log: {
     level: 'verbose'
   },
-  appUrl:'http://localhost:1500',
-  record:{
+  appUrl: 'http://localhost:1500',
+  record: {
     baseUrl: {
       redbox: "http://redbox:9000/redbox",
       mint: "https://dev-redbox.research.uts.edu.au/mint"
@@ -69,10 +69,10 @@ module.exports = {
       }
     }
   },
-  datastores:{
-  mongodb: {
-    adapter: require('sails-mongo'),
-    url: 'mongodb://mongodb:27017/redbox-portal'
+  datastores: {
+    mongodb: {
+      adapter: require('sails-mongo'),
+      url: 'mongodb://mongodb:27017/redbox-portal'
+    }
   }
-}
-  };
+};

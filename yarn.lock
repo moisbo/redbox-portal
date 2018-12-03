@@ -1475,7 +1475,7 @@ bytes@3.0.0:
   resolved "https://registry.yarnpkg.com/bytes/-/bytes-3.0.0.tgz#d32815404d689699f85a4ea4fa8755dd13a96048"
   integrity sha1-0ygVQE1olpn4Wk6k+odV3ROpYEg=
 
-calcyte@^1.0.1:
+calcyte@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/calcyte/-/calcyte-1.0.2.tgz#c7844afc5c488b927a1c013a95f6900bb0158e41"
   integrity sha512-vzBIJTsj1M1AWmr24P4W1LYJU3qpuRuTIlaSettBJrYt7KnIVrW2ZAc/JPKCO5mr+PfNlJymqA39OehzTDukmw==

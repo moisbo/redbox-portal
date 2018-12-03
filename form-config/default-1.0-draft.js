@@ -355,7 +355,7 @@ module.exports = {
                 },
                 {
                   class: 'SelectionField',
-                  compClass: 'SelectionFieldComponent',
+                  compClass: 'DropdownFieldComponent',
                   controlType: 'radio',
                   defaultValue: 'other',
                   definition: {

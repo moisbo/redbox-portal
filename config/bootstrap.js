@@ -76,11 +76,11 @@ module.exports.bootstrap = function(cb) {
       }
       return Observable.of('');
     })
-    .last()
     .flatMap(whatever => {
       // After last, because it was being triggered twice
       return sails.services.workspacetypesservice.bootstrap(sails.services.brandingservice.getDefault());
     })
+    .last()
     .subscribe(retval => {
 
      sails.log.ship = function() {

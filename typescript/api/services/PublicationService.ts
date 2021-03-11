@@ -24,45 +24,74 @@ import 'rxjs/add/operator/toPromise';
 import * as request from "request-promise";
 import * as ejs from 'ejs';
 import * as fs from 'graceful-fs';
+import fse = require('fs-extra');
 import path = require('path');
+import ocfl = require('ocfl');
 
 
 import { Index, jsonld } from 'calcyte';
-const datacrate = require('datacrate').catalog;
+import DatastreamService from "../core/DatastreamService";
+
+const rb2rocrate = require('redbox-ro-crate').rb2rocrate;
+
+const rocrate = require('ro-crate');
 
 declare var sails: Sails;
-declare var RecordsService;
-declare var BrandingService;
+declare var RecordsService, UsersService, BrandingService, RedboxJavaStorageService;
 declare var _;
 
-// NOTE: the publication isn't being triggered if you go straight to review
-// from a new data pub
-
-
+const URL_PLACEHOLDER = '{ID_WILL_BE_HERE}'; // config
+const DEFAULT_IDENTIFIER_NAMESPACE = 'redbox';
 
 export module Services {
-  /**
-   *
-   * a Service to extract a DataPub and put it in a DataCrate with the
-   * metadata crosswalked into the right JSON-LD
-   *
-   * @author <a target='_' href='https://github.com/spikelynch'>Mike Lynch</a>
-   *
-   */
-  export class DataPublication extends services.Services.Core.Service {
+	/**
+	 *
+	 * a Service to extract a DataPub and put it in a RO-Crate with the
+	 * metadata crosswalked into the right JSON-LD
+	 *
+	 * @author <a target='_' href='https://github.com/spikelynch'>Mike Lynch</a>
+	 *
+	 */
+	export class DataPublication extends services.Services.Core.Service {
 
-  	protected _exportedMethods: any = [
-  		'exportDataset'
-  	];
+		protected _exportedMethods: any = [
+			'exportDataset'
+		];
 
+		datastreamService: DatastreamService = null;
 
+		constructor() {
+			super();
+			this.logHeader = "PublicationService::";
+			let that = this;
+			sails.on('ready', function () {
+				that.getDatastreamService();
+			});
+		}
 
-  	public exportDataset(oid, record, options): Observable<any> {
-   		if( this.metTriggerCondition(oid, record, options) === "true") {
+		getDatastreamService() {
+			if (_.isEmpty(sails.config.record) || _.isEmpty(sails.config.record.datastreamService)) {
+				this.datastreamService = RedboxJavaStorageService;
+			} else {
+				this.datastreamService = sails.services[sails.config.storage.serviceName];
+			}
+		}
 
-   			sails.log.info("Called exportDataset on update");
-      	sails.log.info("oid: " + oid);
-      	sails.log.info("options: " + JSON.stringify(options));
+		// exportDataset is the main point of entry. It returns an Observable
+		// which writes out the record's attachments, creates a RO-Crate for
+		// them and imports them into the required repository (staging or
+		// public)
+
+		// in the current version, if the target directory has not yet been
+		// initialised, it initalised an ocfl repository there. A future
+		// release should leave this to boostrap or deployment.
+
+		// the 'user' in the args is whoever triggered the export by clicking the
+		// publication submit button
+
+		public exportDataset(oid, record, options, user): Observable<any> {
+			if( this.metTriggerCondition(oid, record, options) === "true") {
+
 				const site = sails.config.datapubs.sites[options['site']];
 				if( ! site ) {
 					sails.log.error("Unknown publication site " + options['site']);
@@ -76,159 +105,225 @@ export module Services {
 
 				if( ! drid ) {
 					sails.log.error("Couldn't find dataRecord or id for data pub " + oid);
-					sails.log.info(JSON.stringify(record));
 					return Observable.of(null)
 				}
 
-				sails.log.info("Got data record: " + drid);
+				// start an Observable to get/initialise the repository, then call createNewObjectContent
+				// content on it with a callback which will actually write out the attachments and
+				// make a RO-Crate. Once that's done, updates the URL in the data record.
 
-				const attachments = md['dataLocations'].filter(
-					(a) => a['type'] === 'attachment'
-				);
+				// the interplay between Promises and Observables here is too convoluted and needs
+				// refactoring.
 
-				const dir = path.join(site['dir'], oid);
-				try {
+				//sails.log.debug("Bailing out before actually writing data pub");
+				//return Observable.of(null);
 
-					sails.log.info("making dataset dir: " + dir);
-					fs.mkdirSync(dir);
-				} catch(e) {
-					sails.log.error("Couldn't create dataset dir " + dir);
-					sails.log.error(e.name);
-					sails.log.error(e.message);
-					sails.log.error(e.stack);
-					return Observable.of(null);
+				if( ! user || ! user['email'] ) {
+					user = { 'email': '' };
+					sails.log.error("Empty user or no email found");
 				}
 
-				sails.log.info("Going to write attachments");
+				const datasetUrl = site['url'] + '/' + oid + '/';
+				md['citation_url'] = datasetUrl;
+				md['citation_doi'] = md['citation_doi'].replace(URL_PLACEHOLDER, datasetUrl);
 
-				// build a list of observables, each of which writes out an
-				// attachment
+				return Observable.fromPromise(this.getRepository(options['site']))
+					.flatMap((repository) => {
+						return UsersService.getUserWithUsername(record['metaMetadata']['createdBy'])
+							.flatMap((creator) => {
+								return Observable.fromPromise(repository.createNewObjectContent(oid, async (dir) => {
+									await this.writeDataset(creator, user, oid, drid, md, dir);
+								}))
+							})
+					}).flatMap(() => {
+						// updateMeta to save the citation_url and citation_doi back to the
+						// data publication record
+						return RecordsService.updateMeta(sails.config.auth.defaultBrand, oid, record, null, true, false);
+					}).catch(err => {
+						sails.log.error(`Error publishing dataset ${oid} to ocfl repo st ${options['site']}`);
+						sails.log.error(err.name);
+						sails.log.error(err.message);
+						sails.log.error(err.stack);
+						return this.recordPublicationError(oid, record, err);
+					});
 
-				const obs = attachments.map((a) => {
-					sails.log.info("building attachment observable " + a['name']);
-					return RecordsService.getDatastream(drid, a['fileId']).
-						flatMap(ds => {
-							const filename = path.join(dir, a['name']);
-							sails.log.info("about to write " + filename);
-							return Observable.fromPromise(this.writeData(ds.body, filename))
-								.catch(err => {
-									sails.log.error("Error writing attachment " + a['fileId']);
-									sails.log.error(err.name);
-									sails.log.error(err.message);
-                  return new Observable();
-								});
-						});
+			} else {
+				sails.log.debug(`Not publishing: ${oid}, condition not met: ${_.get(options, "triggerCondition", "")}`);
+				return Observable.of(null);
+			}
+		}
+
+
+		// this initialises the repository if it can't load it, which
+		// is a bit rough and ready. FIXME - this should be done in
+		// deployment or at least bootstrapping the server
+
+		private async getRepository(site): Promise<any> {
+			if(! sails.config.datapubs.sites[site] ) {
+				sails.log.error(`unknown site ${site}`);
+				throw(new Error("unknown repository site " + site));
+			} else {
+				const dir = sails.config.datapubs.sites[site].dir;
+				const repository = new ocfl.Repository();
+				try {
+					await repository.load(dir);
+					return repository;
+				} catch(e) {
+					try {
+						const newrepo = new ocfl.Repository();
+						await fse.ensureDir(dir);
+						await newrepo.create(dir);
+						sails.log.info(`New ofcl repository created at ${dir}`);
+						return newrepo;
+					} catch(e) {
+						sails.log.error("Could neither load nor initialise repo at " + dir);
+						sails.log.debug(`repo = ${JSON.stringify(repository)}`);
+						throw(e);
+					}
+				}
+			}
+		}
+
+		// async function which takes a data publication and destination directory
+		// and writes out the attachments and RO-Crate files to it
+
+		// based on the original exportDataset - takes the existing Observable chain
+		// and converts it to a promise so that it can work with the ocfl library
+
+		private async writeDataset(creator: Object, approver: Object, oid: string, drid: string, metadata: Object, dir: string): Promise<any> {
+
+			const mdOnly = metadata['accessRightsToggle'];
+
+			const attachments = metadata['dataLocations'].filter(
+				(a) => ( !mdOnly && a['type'] === 'attachment' && a['selected'] )
+			);
+
+			// make sure attachments have a unique filepath
+
+			attachments.map((a) => {
+				a['path'] = path.join(a['fileId'], a['name']);
+			});
+
+			const obs = attachments.map((a) => {
+				return this.datastreamService.getDatastream(drid, a['fileId']).
+				flatMap(response => {
+					const filedir = path.join(dir, a['fileId']);
+					let dataFile;
+					if (response.readstream) {
+						dataFile = response.readstream
+						return Observable.fromPromise(this.writeDatastream(dataFile, filedir, a['name']));
+					} else {
+						dataFile = Buffer.from(response.body);
+						return Observable.fromPromise(this.writeAttachment(dataFile, filedir, a['name']));
+					}
 				});
+			});
 
-				obs.push(this.makeDataCrate(oid, dir, md));
-				obs.push(this.updateUrl(oid, record, site['url']));
-
-				return Observable.merge(...obs);
-    	} else {
-     		sails.log.info(`Not sending notification log for: ${oid}, condition not met: ${_.get(options, "triggerCondition", "")}`)
-    		return Observable.of(null);
-   		}
-  	}
+			obs.unshift(Observable.fromPromise(this.makeROCrate(creator, approver, oid, dir, metadata)));
+			return Observable.concat(...obs).toPromise();
+		}
 
 
-		// this version works, but I'm worried that it will put the whole of
-		// the buffer in RAM. See writeDatastream for my first attempt, which
-		// doesnt' work.
+		// writeDatastream works for new redbox-storage -- using sails-hook-redbox-storage-mongo.
 
-		private writeData(buffer: Buffer, fn: string): Promise<boolean> {
+		private async writeDatastream(stream: any, dir: string, fn: string): Promise<boolean> {
+			return new Promise<boolean>( (resolve, reject) => {
+				try {
+					fse.ensureDir(dir, direrr => {
+						if (direrr) throw(direrr);
+						var wstream = fs.createWriteStream(path.join(dir, fn));
+						sails.log.debug("start writeDatastream " + fn);
+						stream.pipe(wstream);
+						stream.end();
+						wstream.on('close', () => {
+							sails.log.debug("finished writeDatastream " + fn);
+							resolve(true);
+						});
+						wstream.on('error', (e) => {
+							sails.log.error(e.name);
+							sails.log.error(e.message);
+							throw(e);
+						});
+					});
+				} catch (e) {
+					reject(new Error(e));
+				}
+			});
+		}
+
+		// writeAttachment works for java storage version, it will put the whole of
+		// the buffer in RAM.
+
+		private async writeAttachment(buffer: Buffer, dir: string, fn: string): Promise<boolean> {
 			return new Promise<boolean>( ( resolve, reject ) => {
 				try {
-					fs.writeFile(fn, buffer, () => {
-						sails.log.info("wrote to " + fn);
-						resolve(true)
+					fse.ensureDir(dir, err => {
+						if( ! err ) {
+							fs.writeFile(path.join(dir, fn), buffer, (werr) => {
+								if (werr) throw werr;
+								resolve(true)
+							});
+						} else {
+							throw(err);
+						}
 					});
 				} catch(e) {
 					sails.log.error("attachment write error");
 					sails.log.error(e.name);
 					sails.log.error(e.message);
-					reject;
+					reject(new Error(e));
 				}
 			});
 		}
 
 
-		// This is the first attempt, but it doesn't work - the files it
-		// writes out are always empty. I think it's because the API call
-		// to get the attachment isn't requesting a stream, so it's coming
-		// back as a buffer.
 
-		private writeDatastream(stream: any, fn: string): Promise<boolean> {
-			return new Promise<boolean>( (resolve, reject) => {
-  			var wstream = fs.createWriteStream(fn);
-  			sails.log.info("start writeDatastream " + fn);
-  			stream.pipe(wstream);
-  			stream.end();
-				wstream.on('finish', () => {
-					sails.log.info("finished writeDatastream " + fn);
-					resolve(true);
-				});
-				wstream.on('error', (e) => {
-					sails.log.error("File write error");
-					reject
-    		});
+
+		// Writes an RO-crate preview HTML page
+
+		private async makeROCrate(creator: Object, approver: Object, oid: string, dir: string, metadata: Object): Promise<any> {
+
+			const index = new Index();
+
+			const jsonld_raw = await rb2rocrate.rb2rocrate({
+				'id': oid,
+				'datapub': metadata,
+				'organisation': sails.config.datapubs.metadata.organization,
+				'owner': creator['email'],
+				'approver': approver['email']
 			});
+
+
+
+			const jsonld_file = path.join(dir, sails.config.datapubs.metadata.jsonld_filename);
+			const html_file = path.join(dir, sails.config.datapubs.metadata.html_filename);
+			const namespace = sails.config.datapubs.metadata.identifier_namespace || DEFAULT_IDENTIFIER_NAMESPACE;
+
+			const roc = new rocrate.ROCrate(jsonld_raw);
+
+			roc.index();
+			roc.addIdentifier({identifier: oid, name: namespace})
+
+			const jsonld = roc.json_ld;
+
+			await fs.writeFile(jsonld_file, JSON.stringify(jsonld, null, 2));
+
+			const preview = new rocrate.Preview(roc);
+
+			const preview_html = await preview.render(null, sails.config.datapubs.metadata.render_script);
+			await fse.writeFile(html_file, preview_html);
 		}
 
-		private updateUrl(oid: string, record: Object, baseUrl: string): Observable<any> {
-			const branding = sails.config.auth.defaultBrand; // fix me
-			// Note: the trailing slash on the URL is here to stop nginx auto-redirecting
-			// it, which on localhost:8080 breaks the link in some browsers - see 
-			// https://serverfault.com/questions/759762/how-to-stop-nginx-301-auto-redirect-when-trailing-slash-is-not-in-uri/812461#812461
-			record['metadata']['citation_url'] = baseUrl + '/' + oid + '/';
-			return RecordsService.updateMeta(branding, oid, record);
+		private recordPublicationError(oid: string, record: Object, err: Error): Observable<any> {
+			const branding = sails.config.auth.defaultBrand;
+			// turn off postsave triggers
+			sails.log.info(`recording publication error in record metadata`);
+			record['metadata']['publication_error'] = "Data publication failed with error: " + err.name + " " + err.message;
+			return RecordsService.updateMeta(branding, oid, record, null, true, false);
 		}
 
-
-		private makeDataCrate(oid: string, dir: string, metadata: Object): Observable<any> {
-
-			const owner = 'TODO@shouldnt.the.owner.come.from.the.datapub';
-			const approver = 'TODO@get.the.logged-in.user';
-
-			return Observable.of({})
-				.flatMap(() => {
-					return Observable.fromPromise(datacrate.datapub2catalog({
-						'id': oid,
-						'datapub': metadata,
-						'organisation': sails.config.datapubs.datacrate.organization,
-						'owner': owner,
-						'approver': approver
-					}))
-				}).flatMap((catalog) => {
-					// the following writes out the CATALOG.json and CATALOG.html, and it's all
-					// sync because of legacy code in calcyte.
-					try {
-						const jsonld_h = new jsonld();
-						const catalog_json = path.join(dir, sails.config.datapubs.datacrate.catalog_json);
-						sails.log.info(`Building CATALOG.json with jsonld_h`);
-						sails.log.silly(`catalog = ${JSON.stringify(catalog)}`);
-						sails.log.info(`Writing CATALOG.json to ${catalog_json}`);
-						fs.writeFileSync(catalog_json, JSON.stringify(catalog, null, 2));
-						const index = new Index();
-						index.init(catalog, dir, false);
-						sails.log.info(`Writing CATALOG.html`);
-						index.make_index_html("text_citation", "zip_path"); //writeFileSync
-						return Observable.of({});
-					} catch (error) {
-						sails.log.error("Error (inside) while creating DataCrate");
-						sails.log.error(error.name);
-						sails.log.error(error.message);
-						sails.log.error(error.stack);
-						return Observable.of(null);
-					}
-				}).catch(error => {
-					sails.log.error("Error (outside) while creating DataCrate");
-					sails.log.error(error.name);
-					sails.log.error(error.message);
-					sails.log.error(error.stack);
-					return Observable.of({});
-				});
-		}
 	}
+
 }
 
 module.exports = new Services.DataPublication().exports();
